@@ -14,6 +14,8 @@ type Data struct {
 	Types []string `json:"types"`
 	HorasTrabajadas []time.Duration `json:"horas_trabajadas"`
 	Horario []Horario `json:"horario"`
+	Total  time.Duration 
+	TotalHrsWorked time.Duration
 	// Hora []Hora
 }
 

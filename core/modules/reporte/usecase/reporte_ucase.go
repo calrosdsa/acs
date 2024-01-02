@@ -10,73 +10,77 @@ import (
 
 type reporteUseCase struct {
 	reporteRepo _reporte.ReporteRepo
-	timeout time.Duration
+	timeout     time.Duration
 }
 
-func NewUseCase(timeout time.Duration,reporteRepo _reporte.ReporteRepo) _reporte.ReporteUseCase{
+func NewUseCase(timeout time.Duration, reporteRepo _reporte.ReporteRepo) _reporte.ReporteUseCase {
 	return &reporteUseCase{
-		timeout: timeout,
+		timeout:     timeout,
 		reporteRepo: reporteRepo,
 	}
 }
 
-func (u *reporteUseCase) GetReporteEmpleado(ctx context.Context,buffer *bytes.Buffer)(err error){
-	ctx,cancel := context.WithTimeout(ctx,u.timeout)
+func (u *reporteUseCase) GetReporteEmpleado(ctx context.Context, buffer *bytes.Buffer) (err error) {
+	ctx, cancel := context.WithTimeout(ctx, u.timeout)
 	defer cancel()
-	res,horario,err := u.reporteRepo.GetReporteEmpleado(ctx)
+	res, horario, err := u.reporteRepo.GetReporteEmpleado(ctx)
 
 	horarioByDay := make(map[int][]_reporte.Horario)
 	var (
-		maxMarks int
+		maxMarks  int
 		maxTurnos int
 	)
-	for i := 0;i <len(horario);i++{
-		log.Println(horario[i].StartTime.Hour(),horario[i].StartTime.Minute())
-	    current,exist  :=horarioByDay[horario[i].Day]
+	for i := 0; i < len(horario); i++ {
+		log.Println(horario[i].StartTime.Hour(), horario[i].StartTime.Minute())
+		current, exist := horarioByDay[horario[i].Day]
 
 		if exist {
-			horarioByDay[horario[i].Day] = append(current,horario[i] )
-		}else{
+			horarioByDay[horario[i].Day] = append(current, horario[i])
+		} else {
 			horarioByDay[horario[i].Day] = []_reporte.Horario{horario[i]}
 		}
 	}
-	for i := 0;i <len(res);i++ {
-		currentT,err := getDateTime(res[i].Date,"2006-01-02T15:04:05Z") 
+	for i := 0; i < len(res); i++ {
+		currentT, err := getDateTime(res[i].Date, "2006-01-02T15:04:05Z")
 		if err != nil {
-			log.Println("fail to parse",err)
+			log.Println("fail to parse", err)
 		}
-		horarios,_ := horarioByDay[currentT.Day()]
-		res[i].Horario = horarios
+		// horarios, _ := horarioByDay[currentT.Day()]
+		res[i].Horario = horarioByDay[currentT.Day()]
 		times := res[i].Times
 		types := res[i].Types
 		log.Println()
-		for j := 0;j <len(times);j++ {
-			if types[j] == "1" {		
+		for j := 0; j < len(times); j++ {
+			if types[j] == "1" {
 
-					if len(times) >= (j +2){
-						if types[j+1] == "2"{
-						    j++
-							start,err :=getDateTime(times[j-1],"2006-01-02 15:04:05")
-							if err != nil {
-								log.Println("Fail parse",err)
-							}
-							log.Println("OBTEING TIME END")
-							end,err := getDateTime(times[j],"2006-01-02 15:04:05")
-							if err != nil {
-								log.Println("Fail parse",err)
-							}
-							diff := end.Sub(start)
-							res[i].HorasTrabajadas = append(res[i].HorasTrabajadas, diff) 
-							if len(res[i].HorasTrabajadas) > maxTurnos{
-								maxTurnos = len(res[i].HorasTrabajadas)
-								}	
-								log.Printf("Minutes: %s\n", diff.String())
+				if len(times) >= (j + 2) {
+					if types[j+1] == "2" {
+						
+						j++
+						start, err := getDateTime(times[j-1], "2006-01-02 15:04:05")
+						if err != nil {
+							log.Println("Fail parse", err)
 						}
-					}else{
-				        maxMarks = j + 1
+						log.Println("OBTEING TIME END")
+						end, err := getDateTime(times[j], "2006-01-02 15:04:05")
+						if err != nil {
+							log.Println("Fail parse", err)
+						}
+						diff := end.Sub(start)
+						res[i].HorasTrabajadas = append(res[i].HorasTrabajadas, diff)
+						if len(res[i].HorasTrabajadas) > maxTurnos {
+							maxTurnos = len(res[i].HorasTrabajadas)
+						}
+						th,thw :=checkWorkedHours(res[i].Horario,start,end)
+						res[i].Total = th
+						res[i].TotalHrsWorked +=thw 
+						log.Printf("Minutes: %s\n", diff.String())
 					}
+				} else {
+					maxMarks = j + 1
+				}
 
-			}else{
+			} else {
 				log.Println("Is out")
 			}
 			if j > maxMarks {
@@ -85,7 +89,7 @@ func (u *reporteUseCase) GetReporteEmpleado(ctx context.Context,buffer *bytes.Bu
 		}
 	}
 
-	err = ReporteEmpleado(res,maxTurnos,maxMarks,buffer)
+	err = ReporteEmpleado(res, maxTurnos, maxMarks, buffer)
 	if err != nil {
 		log.Println(err)
 	}
@@ -94,8 +98,33 @@ func (u *reporteUseCase) GetReporteEmpleado(ctx context.Context,buffer *bytes.Bu
 }
 
 
-func getDateTime(str string,layout string)(t time.Time,err error){
-	log.Println("Time to parse",str)
+func checkWorkedHours(horario []_reporte.Horario,start time.Time,end time.Time)(total time.Duration,totalWorked time.Duration){
+	for i := 0;i <len(horario);i++{
+		var count int
+		diff := horario[i].EndTime.Sub(horario[i].StartTime)
+		total += diff
+		end = time.Date(0000,01,01,end.Hour(),end.Minute(),00,100,time.UTC)
+		start = time.Date(0000,01,01,start.Hour(),start.Minute(),00,100,time.UTC)
+		log.Println("Compare",horario[i].StartTime,start)
+		
+		var countT time.Time
+			for j := 0;j<int(diff.Abs().Minutes());j++{
+				log.Println("D I",countT,start)
+				if countT.After(start)  {
+					count++
+					totalWorked = time.Minute * time.Duration(count)
+					log.Println("Total Worked",totalWorked)
+					log.Println(horario[i].StartTime)
+				}
+				countT = horario[i].StartTime.Add(time.Minute * time.Duration(j+1))
+			}
+	}
+	return
+}
+
+
+func getDateTime(str string, layout string) (t time.Time, err error) {
+	log.Println("Time to parse", str)
 	t, err = time.Parse(layout, str)
 	if err != nil {
 		log.Println(err)

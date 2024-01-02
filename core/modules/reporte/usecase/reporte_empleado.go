@@ -41,7 +41,7 @@ func CreateSheet(item []_reporte.Data,maxTurnos int,maxMarks int, sheet string, 
 	f.SetColWidth(sheet, "A", "A", 5)
 	f.SetColWidth(sheet, "B", "B", 15)
 	f.SetColWidth(sheet, "C", "C", float64((8 * maxMarks)))
-	f.SetColWidth(sheet,"D","H",15)
+	f.SetColWidth(sheet,"D","K",18)
 	
 
 	headers := []string{"", "Fecha", "Marcaciones"}
@@ -52,7 +52,9 @@ func CreateSheet(item []_reporte.Data,maxTurnos int,maxMarks int, sheet string, 
 	for i := 0;i < (maxMarks/2);i++{
 		headers = append(headers, fmt.Sprintf("Horas %s",strconv.Itoa(i+1)))
 	}
-	headers = append(headers, "Total horas trabajadas")
+	headers = append(headers, "Hrs. Trabajadas")
+	headers = append(headers, "Hrs. Total")
+	headers = append(headers, "Hrs. Trabajadas 2")
 
 	titleStyle, err := f.NewStyle(&excelize.Style{
 		Font:      &excelize.Font{Color: "1f7f3b", Bold: true, Family: "Arial"},
@@ -124,6 +126,8 @@ func CreateSheet(item []_reporte.Data,maxTurnos int,maxMarks int, sheet string, 
 			}
 		}
 		slice = append(slice, hrsTrabajadas)
+		slice = append(slice, c.Total)
+		slice = append(slice, c.TotalHrsWorked)
 			// fechaInicio, strconv.FormatFloat(float64(c.Hours), 'g', 5, 64) + "hrs",
 			// ReservaExpirada(int(c.Estado))}
 		cell, err := excelize.CoordinatesToCellName(1, idx+3)

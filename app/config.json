@@ -7,10 +7,10 @@
     "timeout":2
   },
   "database": {
-      "host": "localhost",
+      "host": "10.0.0.132",
       "port": 5432,
       "user": "postgres",
-      "pass": "postgres",
+      "pass": "12ab34cd56ef",
       "name": "postgres"
   },
   "jwt":{
