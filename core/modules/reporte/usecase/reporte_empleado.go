@@ -3,7 +3,6 @@ package usecase
 import (
 	"fmt"
 	"log"
-	"strconv"
 	"strings"
 	"time"
 
@@ -41,20 +40,15 @@ func CreateSheet(item []_reporte.Data,maxTurnos int,maxMarks int, sheet string, 
 	f.SetColWidth(sheet, "A", "A", 5)
 	f.SetColWidth(sheet, "B", "B", 15)
 	f.SetColWidth(sheet, "C", "C", float64((8 * maxMarks)))
-	f.SetColWidth(sheet,"D","K",18)
+	f.SetColWidth(sheet, "D", "D", float64((9 * maxTurnos)))
+	f.SetColWidth(sheet,"E","H",20)
 	
 
-	headers := []string{"", "Fecha", "Marcaciones"}
-	for i := 1;i < (maxTurnos+1);i++{
-	    //  f.SetColWidth(sheet, "C", "C", float64((10 * maxMarks)))
-		headers = append(headers, fmt.Sprintf("Turno %s",strconv.Itoa(i)))
-	}
-	for i := 0;i < (maxMarks/2);i++{
-		headers = append(headers, fmt.Sprintf("Horas %s",strconv.Itoa(i+1)))
-	}
+	headers := []string{"", "Fecha", "Marcaciones","Horario"}	
 	headers = append(headers, "Hrs. Trabajadas")
 	headers = append(headers, "Hrs. Total")
 	headers = append(headers, "Hrs. Trabajadas 2")
+	headers = append(headers, "Hrs. Retraso")
 
 	titleStyle, err := f.NewStyle(&excelize.Style{
 		Font:      &excelize.Font{Color: "1f7f3b", Bold: true, Family: "Arial"},
@@ -68,7 +62,7 @@ func CreateSheet(item []_reporte.Data,maxTurnos int,maxMarks int, sheet string, 
 		log.Println(err)
 	}
 	// set style for the 'SUNDAY' to 'SATURDAY'
-	if err := f.SetCellStyle(sheet, "A2", "I2", titleStyle); err != nil {
+	if err := f.SetCellStyle(sheet, "A2", "H2", titleStyle); err != nil {
 		log.Println(err)
 		return
 	}
@@ -106,28 +100,27 @@ func CreateSheet(item []_reporte.Data,maxTurnos int,maxMarks int, sheet string, 
 		marcaciones = strings.TrimSuffix(marcaciones," - ")
 			
 		slice = append(slice, marcaciones)
-
-		for j := 0;j <maxTurnos;j++ {
+		var horarioStr string
+		for j := 0;j <len(c.Horario);j++ {
 			if len(c.Horario) >= (1+j){
-				slice = append(slice, c.Horario[j].StartTime.Format("15:04") + " - " + c.Horario[j].EndTime.Format("15:04"))
-			}else {
-				slice = append(slice, " - ")
-
+				horarioStr +=  c.Horario[j].StartTime.Format("15:04") + " - " + c.Horario[j].EndTime.Format("15:04") + "   "
+				// horarioStr = strings.TrimSuffix(horarioStr," ")
 			}
 		}
-
+		slice = append(slice, horarioStr)
 		for j := 0;j <(maxMarks /2);j++ {
 			if len(c.HorasTrabajadas) >= (1+j){
-			slice = append(slice, c.HorasTrabajadas[j])
+			// slice = append(slice, c.HorasTrabajadas[j])
 			hrsTrabajadas += c.HorasTrabajadas[j]
-			}else{
-				slice = append(slice, " - ")
-
+			// }else{
+				// slice = append(slice, " - ")
 			}
 		}
+		// dec := time.Minute * 66
 		slice = append(slice, hrsTrabajadas)
 		slice = append(slice, c.Total)
 		slice = append(slice, c.TotalHrsWorked)
+		slice = append(slice, c.Retraso)
 			// fechaInicio, strconv.FormatFloat(float64(c.Hours), 'g', 5, 64) + "hrs",
 			// ReservaExpirada(int(c.Estado))}
 		cell, err := excelize.CoordinatesToCellName(1, idx+3)

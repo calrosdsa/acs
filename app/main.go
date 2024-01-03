@@ -10,6 +10,8 @@ import (
 
 	_ "github.com/lib/pq"
 	"github.com/spf13/viper"
+
+	_ "github.com/denisenkom/go-mssqldb"
 )
 
 func init() {
@@ -33,15 +35,23 @@ func main(){
 		log.Println(loc)
 	}
 	host := viper.GetString(`database.host`)
-	port := viper.GetString(`database.port`)
-	user := viper.GetString(`database.user`)
-	password := viper.GetString(`database.pass`)
+	port := viper.GetInt(`database.port`)
+	// user := viper.GetString(`database.user`)
+	// password := viper.GetString(`database.pass`)
 	dbname := viper.GetString(`database.name`)
 	time.Local = loc
-	psqlInfo := fmt.Sprintf("postgresql://%s:%s@%s:%s/%s?sslmode=disable",
-		 user, password,host,port, dbname)
+	// psqlInfo := fmt.Sprintf("postgresql://%s:%s@%s:%s/%s?sslmode=disable",
+	// 	 user, password,host,port, dbname)
 
-	db, err := sql.Open("postgres", psqlInfo)
+
+	// stringConn := fmt.Sprintf("mssql://%s:%s@%s:%s/instance?database=%s",
+	// 	 user, password,host,"1434", dbname)
+	connString := fmt.Sprintf("server=%s;port=%d;database=%s;trusted_connection=yes", host, port,dbname)
+
+	
+	db, err := sql.Open("sqlserver", connString)	 
+
+	// db, err := sql.Open("postgres", psqlInfo)
 	if err != nil {
 		log.Println(err)
 	}

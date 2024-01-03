@@ -2,11 +2,10 @@ package usecase
 
 import (
 	_reporte "acs/domain/repository/reporte"
-	"strings"
-
 	"bytes"
 	"context"
 	"log"
+	// "sync"
 	"time"
 )
 
@@ -33,7 +32,6 @@ func (u *reporteUseCase) GetReporteEmpleado(ctx context.Context, buffer *bytes.B
 		maxTurnos int
 	)
 	for i := 0; i < len(horario); i++ {
-		
 		log.Println(horario[i].StartTime.Hour(), horario[i].StartTime.Minute())
 		current, exist := horarioByDay[horario[i].Day]
 
@@ -44,10 +42,6 @@ func (u *reporteUseCase) GetReporteEmpleado(ctx context.Context, buffer *bytes.B
 		}
 	}
 	for i := 0; i < len(res); i++ {
-		res[i].Times = strings.Split(res[i].TimesString, ",")
-		res[i].Types = strings.Split(res[i].TypesString, ",")
-		log.Println(res[i].Times)
-		log.Println(res[i].Types)
 		currentT, err := getDateTime(res[i].Date, "2006-01-02T15:04:05Z")
 		if err != nil {
 			log.Println("fail to parse", err)
@@ -56,13 +50,13 @@ func (u *reporteUseCase) GetReporteEmpleado(ctx context.Context, buffer *bytes.B
 		res[i].Horario = horarioByDay[currentT.Day()]
 		times := res[i].Times
 		types := res[i].Types
-		log.Println(types)
+		log.Println()
 		for j := 0; j < len(times); j++ {
 			if types[j] == "1" {
 
 				if len(times) >= (j + 2) {
 					if types[j+1] == "2" {
-						
+
 						j++
 						start, err := getDateTime(times[j-1], "2006-01-02 15:04:05")
 						if err != nil {
@@ -78,10 +72,13 @@ func (u *reporteUseCase) GetReporteEmpleado(ctx context.Context, buffer *bytes.B
 						if len(res[i].HorasTrabajadas) > maxTurnos {
 							maxTurnos = len(res[i].HorasTrabajadas)
 						}
-						th,thw,retraso :=checkWorkedHours(res[i].Horario,start,end)
+						th, thw,retraso := checkWorkedHours(res[i].Horario, start, end)
 						res[i].Retraso += retraso
+						// th,thw := <-thCh,<-thwCh
 						res[i].Total = th
-						res[i].TotalHrsWorked +=thw 
+						res[i].TotalHrsWorked += thw
+						log.Println("Chan Res",th,thw)
+						log.Printf("Minutes: %s\n", diff.String())
 					}
 				} else {
 					maxMarks = j + 1
@@ -104,42 +101,46 @@ func (u *reporteUseCase) GetReporteEmpleado(ctx context.Context, buffer *bytes.B
 	return
 }
 
+func checkWorkedHours(horario []_reporte.Horario, start time.Time, end time.Time) (
+	total time.Duration, totalWorked time.Duration,retraso time.Duration) {
+	// totalChan := make(chan time.Duration)
+	// totalWorkedChan := make(chan time.Duration)
+	// defer func ()  {
+	// 	close(totalChan)
+	// 	close(totalWorkedChan)
+	// }()
+	// var wg = &sync.WaitGroup{}
 
-func checkWorkedHours(horario []_reporte.Horario,start time.Time,end time.Time)(
-	total time.Duration,totalWorked time.Duration,retraso time.Duration){
-	for i := 0;i <len(horario);i++{
-		var count int
-		diff := horario[i].EndTime.Sub(horario[i].StartTime)
-		total += diff
-		end = time.Date(0000,01,01,end.Hour(),end.Minute(),00,100,time.UTC)
-		start = time.Date(0000,01,01,start.Hour(),start.Minute(),00,100,time.UTC)
-		horario[i].StartTime =  time.Date(0000,01,01,horario[i].StartTime.Hour(),horario[i].StartTime.Minute(),00,100,time.UTC)
-		horario[i].EndTime =  time.Date(0000,01,01,horario[i].EndTime.Hour(),horario[i].EndTime.Minute(),00,100,time.UTC)
-		// log.Println("Compare",horario[i].StartTime,horario[i].EndTime,start,end)
-		
-		var countT time.Time
-		var countTm time.Time
-		if horario[i].EndTime.After(start) && end.After(horario[i].StartTime){
-			if start.Before(horario[i].StartTime){
-				countTm = horario[i].StartTime.Add(time.Minute+1)
-			}
-				for j := 0;j<int(diff.Abs().Minutes());j++{
-				countT = horario[i].StartTime.Add(time.Minute * time.Duration(j+1))
-				if countT.After(start) && countTm.After(horario[i].StartTime) && countT.Before(end) {
+	for i := 0; i < len(horario); i++ {
+			var count int
+			diff := horario[i].EndTime.Sub(horario[i].StartTime)
+			total += diff
+			// totalChan <- total
+			end = time.Date(0000, 01, 01, end.Hour(), end.Minute(), 00, 100, time.UTC)
+			start = time.Date(0000, 01, 01, start.Hour(), start.Minute(), 00, 100, time.UTC)
+			
+				var countT time.Time
+				log.Println("Compare", horario[i].StartTime, start)
+				
+				for j := 0; j < int(diff.Abs().Minutes()); j++ {
+					// wg.Add(1)
+					// log.Println("D I", countT, start)
+				if countT.After(start) {
 					count++
 					totalWorked = time.Minute * time.Duration(count)
-					}else{
-						if count == 0{
-							retraso = time.Minute * time.Duration(j +1)
-						}
+					// log.Println("Total Worked", totalWorked)
+					// log.Println(horario[i].StartTime)
 				}
+				countT = horario[i].StartTime.Add(time.Minute * time.Duration(j+1))
+				// wg.Done()
 			}
-		}
-			
-	}
-	return
+	}	
+	// wg.Wait()
+	// total = <- totalChan
+	// totalWorked = <- totalWorkedChan
+	// log.Println("Chan res",total,totalWorked)
+	return 
 }
-
 
 func getDateTime(str string, layout string) (t time.Time, err error) {
 	log.Println("Time to parse", str)

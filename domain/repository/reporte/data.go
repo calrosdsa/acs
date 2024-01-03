@@ -12,10 +12,15 @@ type Data struct {
 	// MarcacionData MarcacionData `json:"marcacion_data"`
 	Times []string `json:"times"`
 	Types []string `json:"types"`
+
+	TimesString string 
+	TypesString string `json:"typesString"`
+
 	HorasTrabajadas []time.Duration `json:"horas_trabajadas"`
 	Horario []Horario `json:"horario"`
 	Total  time.Duration 
 	TotalHrsWorked time.Duration
+	Retraso time.Duration
 	// Hora []Hora
 }
 
