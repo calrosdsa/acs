@@ -33,11 +33,28 @@ func (p *repoReporte)GetReporteEmpleado(ctx context.Context)(res []_reporte.Data
 	// 		, '2024-01-06'::timestamp
 	// 		, '1 day'::interval) dd;`
 	log.Println("GETTING DATA")
-    query = `select cast(DATEADD(DAY, value, '2024-01-01') as date) as date,
+    query = `select 
+	 cast(DATEADD(DAY, value, '2024-01-01') as date) as date,
 	(select STRING_AGG(convert(varchar(25), created_on, 120), ',') from marcacion where
 	CAST(created_on as date) = cast(DATEADD(DAY, value, '2024-01-01') as date)) AS times,
 	(select STRING_AGG(CAST(type_marcacion AS VARCHAR), ',') from marcacion where
-	CAST(created_on as date) = cast(DATEADD(DAY, value, '2024-01-01') as date)) AS types
+	CAST(created_on as date) = cast(DATEADD(DAY, value, '2024-01-01') as date)) AS types,
+	(select TOP 1 convert(varchar(25), created_on, 120) from marcacion where
+	    CAST(created_on as date) = cast(DATEADD(DAY, value -1, '2024-01-01') as date)
+		order by created_on desc
+	    ) AS firstM,
+    (select TOP 1 convert(varchar(25), created_on, 120) from marcacion where
+	    CAST(created_on as date) = cast(DATEADD(DAY, value + 1, '2024-01-01') as date)
+		order by created_on 
+	    ) AS lastM,
+     (select TOP 1 CAST(type_marcacion AS VARCHAR) from marcacion where
+	    CAST(created_on as date) = cast(DATEADD(DAY, value - 1, '2024-01-01') as date)
+		order by created_on  desc
+	    ) AS firstT,
+	(select TOP 1 CAST(type_marcacion AS VARCHAR) from marcacion where
+	    CAST(created_on as date) = cast(DATEADD(DAY, value + 1, '2024-01-01') as date)
+		order by created_on 
+	    ) AS lastT
 	from GENERATE_SERIES(0, 5);`
 	res,err = p.fetchData(ctx,query)
 	if err != nil {
@@ -68,6 +85,10 @@ func (p *repoReporte) fetchData(ctx context.Context, query string, args ...inter
 			&t.Date,
 			&t.TimesString,
 			&t.TypesString,
+			&t.FirstM,
+			&t.LastM,
+			&t.FirstT,
+			&t.LastT,
 		)
 		res = append(res, t)
 	}

@@ -21,6 +21,11 @@ type Data struct {
 	Total  time.Duration 
 	TotalHrsWorked time.Duration
 	Retraso time.Duration
+
+	FirstM *string
+	LastM *string
+	FirstT *string
+	LastT *string
 	// Hora []Hora
 }
 

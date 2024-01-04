@@ -39,8 +39,8 @@ func CreateSheet(item []_reporte.Data,maxTurnos int,maxMarks int, sheet string, 
 	f.NewSheet(sheet)
 	f.SetColWidth(sheet, "A", "A", 5)
 	f.SetColWidth(sheet, "B", "B", 15)
-	f.SetColWidth(sheet, "C", "C", float64((8 * maxMarks)))
-	f.SetColWidth(sheet, "D", "D", float64((9 * maxTurnos)))
+	f.SetColWidth(sheet, "C", "C", float64((9 * maxMarks)))
+	f.SetColWidth(sheet, "D", "D", float64((12 * maxTurnos)))
 	f.SetColWidth(sheet,"E","H",20)
 	
 
@@ -72,8 +72,6 @@ func CreateSheet(item []_reporte.Data,maxTurnos int,maxMarks int, sheet string, 
 	if err != nil {
 		log.Println(err)
 	}
-
-
 	f.SetSheetRow(sheet, cell, &headers)
 
 	if err != nil {
