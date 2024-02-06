@@ -7,11 +7,11 @@
     "timeout":2
   },
   "database": {
-      "host": "localhost",
-      "port": 1434,
-      "user": "jorge",
-      "pass": "12ab34cd56ef",
-      "name": "master"
+      "host": "172.20.20.131",
+      "port": "1433",
+      "user": "sa",
+      "pass": "Teclu2021",
+      "name": "Tmac_Manager1"
   },
   "jwt":{
     "jwt_secret":"jwtsecrettoken$"

@@ -26,32 +26,33 @@ func init() {
 		log.Println("Service RUN on DEBUG mode")
 	}
 
-	
 }
+// nssm install GoService D:\acs\acs\app\main.exe
 
-func main(){
+func main() {
 	loc, err := time.LoadLocation("America/Chicago")
 	if err != nil {
 		log.Println(loc)
 	}
 	host := viper.GetString(`database.host`)
-	port := viper.GetInt(`database.port`)
-	// user := viper.GetString(`database.user`)
-	// password := viper.GetString(`database.pass`)
+	port := viper.GetString(`database.port`)
+	user := viper.GetString(`database.user`)
+	password := viper.GetString(`database.pass`)
 	dbname := viper.GetString(`database.name`)
 	time.Local = loc
 	// psqlInfo := fmt.Sprintf("postgresql://%s:%s@%s:%s/%s?sslmode=disable",
 	// 	 user, password,host,port, dbname)
 
+	connString := fmt.Sprintf("sqlserver://%s:%s@%s:%s?database=%s", user, password, host, port,dbname)
+	// connString := fmt.Sprintf("server=%s;port=%d;database=%s;trusted_connection=yes", host, port, dbname)
 
-	// stringConn := fmt.Sprintf("mssql://%s:%s@%s:%s/instance?database=%s",
-	// 	 user, password,host,"1434", dbname)
-	connString := fmt.Sprintf("server=%s;port=%d;database=%s;trusted_connection=yes", host, port,dbname)
-
-	
-	db, err := sql.Open("sqlserver", connString)	 
+	db, err := sql.Open("sqlserver", connString)
 
 	// db, err := sql.Open("postgres", psqlInfo)
+	if err != nil {
+		log.Println(err)
+	}
+	err = db.Ping()
 	if err != nil {
 		log.Println(err)
 	}

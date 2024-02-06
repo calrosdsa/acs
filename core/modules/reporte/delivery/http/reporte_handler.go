@@ -1,7 +1,7 @@
 package http
 
 import (
-	_reporte "acs/domain/repository/reporte"
+	_r "acs/domain/repository"
 	"bytes"
 	"net/http"
 
@@ -9,20 +9,27 @@ import (
 )
 
 type reporteHandler struct{
-	reporteUcase  _reporte.ReporteUseCase
+	reporteUcase  _r.ReporteUseCase
 }
 
-func NewHandler(e *echo.Echo,reporteUcase _reporte.ReporteUseCase){
+func NewHandler(e *echo.Echo,reporteUcase _r.ReporteUseCase){
 	handler := reporteHandler{
 		reporteUcase: reporteUcase,
 	}
-	e.GET("/v1/reporte/empleados/",handler.GetReporteEmpleado)
+	e.POST("/v1/reporte/empleados/",handler.GetReporteEmpleado)
+
 }
+
 
 func (h *reporteHandler)GetReporteEmpleado(c echo.Context)(err error){
 	ctx := c.Request().Context()
 	var buffer bytes.Buffer
-	err = h.reporteUcase.GetReporteEmpleado(ctx,&buffer)
+	var data _r.ReporteRequest
+	err = c.Bind(&data)
+	if err != nil {
+		return c.JSON(http.StatusUnprocessableEntity,_r.ResponseMessage{Message: err.Error()})
+	}
+	err = h.reporteUcase.GetReportEmploye(ctx,data,&buffer)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest,err.Error())
 	}
