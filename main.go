@@ -1,62 +1,52 @@
 package main
 
 import (
-	"database/sql"
 	"fmt"
-	"log"
-	"time"
+	_ "image/gif"
+	_ "image/jpeg"
+	_ "image/png"
 
-	_init "acs/core"
-
-	_ "github.com/lib/pq"
-	"github.com/spf13/viper"
-
-	_ "github.com/denisenkom/go-mssqldb"
+	"github.com/xuri/excelize/v2"
 )
 
-func init() {
-	viper.SetConfigFile(`./app/config.json`)
-	// viper.SetConfigFile(`/home/regate/r_backend/app/config.json`)
-	err := viper.ReadInConfig()
-	if err != nil {
-		panic(err)
-	}
-
-	if viper.GetBool(`debug`) {
-		log.Println("Service RUN on DEBUG mode")
-	}
-
-}
-// nssm install GoService D:\acs\acs\app\main.exe
-
 func main() {
-	loc, err := time.LoadLocation("America/Chicago")
-	if err != nil {
-		log.Println(loc)
-	}
-	host := viper.GetString(`database.host`)
-	port := viper.GetString(`database.port`)
-	user := viper.GetString(`database.user`)
-	password := viper.GetString(`database.pass`)
-	dbname := viper.GetString(`database.name`)
-	time.Local = loc
-	// psqlInfo := fmt.Sprintf("postgresql://%s:%s@%s:%s/%s?sslmode=disable",
-	// 	 user, password,host,port, dbname)
+	f := excelize.NewFile()
+	defer func() {
+		if err := f.Close(); err != nil {
+			fmt.Println(err)
+		}
+	}()
 
-	connString := fmt.Sprintf("sqlserver://%s:%s@%s:%s?database=%s", user, password, host, port,dbname)
-	// connString := fmt.Sprintf("server=%s;port=%d;database=%s;trusted_connection=yes", host, port, dbname)
+	styleId, err := f.NewStyle(&excelize.Style{
+		Alignment: &excelize.Alignment{Vertical: "center", Horizontal: "center"},
+	})
+	sheet := "Sheet1"
 
-	db, err := sql.Open("sqlserver", connString)
-
-	// db, err := sql.Open("postgres", psqlInfo)
-	if err != nil {
-		log.Println(err)
-	}
-	err = db.Ping()
-	if err != nil {
-		log.Println(err)
+	// Insert a picture.
+	f.SetColWidth(sheet, "B", "B", 13)
+	f.SetColWidth(sheet, "C", "C", 25)
+	if err := f.SetRowHeight(sheet, 1, 36); err != nil {
+		fmt.Println(err)
+		return
 	}
 
-	_init.InitServer(db)
-	defer db.Close()
+	f.MergeCell(sheet, "B1", "C1")
+
+	if err = f.SetCellStyle(sheet, "B1", "C1", styleId); err != nil {
+		return
+	}
+
+	if err := f.AddPicture(sheet, "B1", "./app/media/logo.png", &excelize.GraphicOptions{
+		AutoFit: true,
+		OffsetY: 10,
+		ScaleX:  1,
+		ScaleY:  1,
+	}); err != nil {
+		fmt.Println(err)
+		return
+	}
+	// Insert a picture scaling in the cell with location hyperlink.
+	if err := f.SaveAs("./app/media/template.xlsx"); err != nil {
+		fmt.Println(err)
+	}
 }

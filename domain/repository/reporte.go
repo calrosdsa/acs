@@ -67,7 +67,6 @@ type ReporteUseCase interface {
 	// GetReporteEmpleado(ctx context.Context, buffer *bytes.Buffer, d TMarcacionAsistencia) (err error)
 }
 
-
 type ReportInfo struct {
 	EmployeName  string `json:"employeName"`
 	GerenciaName string `json:"gerenciaName"`
@@ -78,7 +77,7 @@ type ReportInfo struct {
 
 type ReporteRequest struct {
 	CHGuid string `json:"cardHolderGuid"`
-	Lang string `json:"lang"`
+	Lang   string `json:"lang"`
 }
 
 type TMarcacionAsistencia struct {
@@ -91,4 +90,8 @@ type TMarcacionAsistencia struct {
 	Fecha           string `json:"fecha"`
 	IdZona          int    `json:"idZona"`
 	TypeMarcacion   int    `json:"typeMarcacion"`
+
+	IdPerfil int `json:"idPerfil"`
+	IdArea   int `json:"idArea"`
+	IdSitio  int `json:"IdSitio"`
 }

@@ -9,7 +9,7 @@ func NewPaletteColor() _r.ColorPalette {
 		PrimaryColor:   "008542",
 		ColorWhite:     "ffffff",
 		SecondaryColor: "ffcc33",
-		BorderColor:    "6e6e6e",
+		BorderColor:    "aaaaaa",
 	}
 }
 

@@ -2,6 +2,9 @@ package util
 
 import (
 	_r "acs/domain/repository"
+	"fmt"
+	"time"
+
 	// "log"
 
 	"github.com/xuri/excelize/v2"
@@ -10,14 +13,14 @@ import (
 type reporteUtil struct {
 	Palette   _r.ColorPalette
 	TextSizes _r.TextSizes
-	Locale _r.Locale
+	Locale    _r.Locale
 }
 
-func New(palette _r.ColorPalette, textSizes _r.TextSizes,locale _r.Locale) _r.ReporteUtil {
+func New(palette _r.ColorPalette, textSizes _r.TextSizes, locale _r.Locale) _r.ReporteUtil {
 	return &reporteUtil{
 		Palette:   palette,
 		TextSizes: textSizes,
-		Locale: locale,
+		Locale:    locale,
 	}
 }
 
@@ -38,6 +41,13 @@ func (r *reporteUtil) SetUpReporteLayout(sheet string, f *excelize.File) (err er
 	f.SetColStyle(sheet, "I", styleId)
 	f.SetColStyle(sheet, "J", styleId)
 	f.SetColStyle(sheet, "K", styleId)
+	f.SetColStyle(sheet, "L", styleId)
+	f.SetColStyle(sheet, "M", styleId)
+	f.SetColStyle(sheet, "N", styleId)
+	f.SetColStyle(sheet, "O", styleId)
+	f.SetColStyle(sheet, "P", styleId)
+	f.SetColStyle(sheet, "Q", styleId)
+
 
 	return
 }
@@ -62,6 +72,17 @@ func (r *reporteUtil) GetTitleStyle(f *excelize.File) (styleId int, err error) {
 	})
 	return
 }
+func (r *reporteUtil) GetTitleStyle2(f *excelize.File) (styleId int, err error) {
+	styleId, err = f.NewStyle(&excelize.Style{
+		Font:      &excelize.Font{Color: r.Palette.ColorWhite, Bold: true, Family: "Arial", Size: r.TextSizes.Small},
+		Fill:      excelize.Fill{Type: "pattern", Color: []string{r.Palette.SecondaryColor}, Pattern: 1},
+		Alignment: &excelize.Alignment{Vertical: "center", Horizontal: "center"},
+		Border: []excelize.Border{{Type: "top", Style: 1, Color: r.Palette.BorderColor}, {Type: "left", Style: 1, Color: r.Palette.BorderColor},
+			{Type: "bottom", Style: 1, Color: r.Palette.BorderColor}, {Type: "right", Style: 1, Color: r.Palette.BorderColor}},
+		// Border:    []excelize.Border{{Type: "Bottom", Style: 2, Color: "1f7f3b"}},
+	})
+	return
+}
 
 func (r *reporteUtil) GetCommonCellStyle(f *excelize.File) (styleId int, err error) {
 	styleId, err = f.NewStyle(&excelize.Style{
@@ -75,7 +96,19 @@ func (r *reporteUtil) GetCommonCellStyle(f *excelize.File) (styleId int, err err
 	return
 }
 
-func (r *reporteUtil) SetUpHeader(sheet string, f *excelize.File, d _r.ReportInfo, titleStyle, cellStyle int,lang string) (err error) {
+func (r *reporteUtil) GetCellCenterStyle(f *excelize.File) (styleId int, err error) {
+	styleId, err = f.NewStyle(&excelize.Style{
+		Font: &excelize.Font{Family: "Arial", Size: r.TextSizes.Small},
+		// Fill:      excelize.Fill{Type: "pattern", Color: []string{r.Palette.PrimaryColor}, Pattern: 1},
+		Alignment: &excelize.Alignment{Vertical: "center", Horizontal: "center"},
+		Border: []excelize.Border{{Type: "top", Style: 1, Color: r.Palette.BorderColor}, {Type: "left", Style: 1, Color: r.Palette.BorderColor},
+			{Type: "bottom", Style: 1, Color: r.Palette.BorderColor}, {Type: "right", Style: 1, Color: r.Palette.BorderColor}},
+		// Border:    []excelize.Border{{Type: "Bottom", Style: 2, Color: "1f7f3b"}},
+	})
+	return
+}
+
+func (r *reporteUtil) SetUpHeader(sheet string, f *excelize.File, d _r.ReportInfo, titleStyle, titleStyle2, cellCenterStyle, cellStyle int, lang string) (err error) {
 
 	cell, err := excelize.CoordinatesToCellName(2, 2)
 	if err != nil {
@@ -87,7 +120,7 @@ func (r *reporteUtil) SetUpHeader(sheet string, f *excelize.File, d _r.ReportInf
 	if err = f.SetCellStyle(sheet, "C2", "C2", cellStyle); err != nil {
 		return
 	}
-	f.SetSheetRow(sheet, cell, &[]string{r.Locale.MustLocalize("Name",lang) , d.EmployeName})
+	f.SetSheetRow(sheet, cell, &[]string{r.Locale.MustLocalize("Name", lang), d.EmployeName})
 
 	cell, err = excelize.CoordinatesToCellName(2, 3)
 	if err != nil {
@@ -99,7 +132,7 @@ func (r *reporteUtil) SetUpHeader(sheet string, f *excelize.File, d _r.ReportInf
 	if err = f.SetCellStyle(sheet, "C3", "C3", cellStyle); err != nil {
 		return
 	}
-	f.SetSheetRow(sheet, cell, &[]string{r.Locale.MustLocalize("Area",lang), d.GerenciaName})
+	f.SetSheetRow(sheet, cell, &[]string{r.Locale.MustLocalize("Area", lang), d.GerenciaName})
 
 	cell, err = excelize.CoordinatesToCellName(2, 4)
 	if err != nil {
@@ -111,7 +144,7 @@ func (r *reporteUtil) SetUpHeader(sheet string, f *excelize.File, d _r.ReportInf
 	if err = f.SetCellStyle(sheet, "C4", "C4", cellStyle); err != nil {
 		return
 	}
-	f.SetSheetRow(sheet, cell, &[]string{r.Locale.MustLocalize("Place",lang), d.SitioName})
+	f.SetSheetRow(sheet, cell, &[]string{r.Locale.MustLocalize("Place", lang), d.SitioName})
 
 	cell, err = excelize.CoordinatesToCellName(5, 2)
 	if err != nil {
@@ -121,27 +154,49 @@ func (r *reporteUtil) SetUpHeader(sheet string, f *excelize.File, d _r.ReportInf
 	if err != nil {
 		return
 	}
-	if err = f.SetCellStyle(sheet, "E2", "F2", titleStyle); err != nil {
+	if err = f.SetCellStyle(sheet, "E2", "F2", titleStyle2); err != nil {
 		return
 	}
 	// log.Println(cell2,cell)
-	f.SetSheetRow(sheet, cell, &[]string{r.Locale.MustLocalize("TimePeriod",lang)})
+	f.SetSheetRow(sheet, cell, &[]string{r.Locale.MustLocalize("TimePeriod", lang)})
 
-	// cell, err = excelize.CoordinatesToCellName(5, 2)
-	// if err != nil {
-	// 	return
-	// }
-	// err = f.MergeCell(sheet, "E2", "F2")
-	// if err != nil {
-	// 	return
-	// }
-	// if err = f.SetCellStyle(sheet, "E2", "F2", titleStyle); err != nil {
-	// 	return
-	// }
-	// // log.Println(cell2,cell)
-	// f.SetSheetRow(sheet, cell, &[]string{"FECHA INICIO"})
+	cell, err = excelize.CoordinatesToCellName(5, 3)
+	if err != nil {
+		return
+	}
+
+	if err = f.SetCellStyle(sheet, "E3", "F3", titleStyle); err != nil {
+		return
+	}
+	// log.Println(cell2,cell)
+	f.SetSheetRow(sheet, cell, &[]string{r.Locale.MustLocalize("StartDate", lang), r.Locale.MustLocalize("EndDate", lang)})
+
+	cell, err = excelize.CoordinatesToCellName(5, 4)
+	if err != nil {
+		return
+	}
+
+	if err = f.SetCellStyle(sheet, "E4", "F4", cellCenterStyle); err != nil {
+		return
+	}
+	// log.Println(cell2,cell)
+	f.SetSheetRow(sheet, cell, &[]string{d.From, d.To})
 
 	return
 }
 
-// ffcc33
+func (r *reporteUtil) SetUpTotal(sheet string, f *excelize.File, totalHrsWorked, totalHrsWorkedInSchedule, totalHrsDelay time.Duration,
+	startCol, startRow, titleStyle, cellStyle int, col1, col2, col3, col4, lang string) (err error) {
+	cell, err := excelize.CoordinatesToCellName(startCol, startRow)
+	if err != nil {
+		return
+	}
+	if err = f.SetCellStyle(sheet, fmt.Sprintf("%s%d", col1, startRow), fmt.Sprintf("%s%d", col1, startRow), titleStyle); err != nil {
+		return
+	}
+	if err = f.SetCellStyle(sheet, fmt.Sprintf("%s%d", col2, startRow), fmt.Sprintf("%s%d", col4, startRow), cellStyle); err != nil {
+		return
+	}
+	f.SetSheetRow(sheet, cell, &[]string{r.Locale.MustLocalize("Total", lang), totalHrsWorked.String(), totalHrsWorkedInSchedule.String(), totalHrsDelay.String()})
+	return
+}

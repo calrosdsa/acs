@@ -5,8 +5,14 @@ Area = "AREA"
 
 Date = "DATE"
 Markings = "MARCACIONES"
-Horario = "SCHEDULE"
-HrsTrabajadas = "HOURS WORKED"
-TotalHours = "TOTAL HOURS
+Schedule = "SCHEDULE"
+HoursWorked = "HOURS WORKED"
+TotalHours = "TOTAL HOURS"
+TotalHoursWorkedInSchedule = "TOTAL HOURS IN SCHEDULE"
+Delay = "Delay"
 
+StartDate = "START DATE"
+EndDate = "END DATE"
+
+Total = "Total"
 

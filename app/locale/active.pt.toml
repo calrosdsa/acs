@@ -3,4 +3,16 @@ TimePeriod = "PERIODO DE TIEMPO"
 Place = "LUGAR"
 Area = "ÁREA"
 
+Date = "DATE"
+Markings = "MARCACIONES"
+Schedule = "SCHEDULE"
+HoursWorked = "HOURS WORKED"
+TotalHours = "TOTAL HOURS"
+TotalHoursWorkedInSchedule = "TOTAL HOURS IN SCHEDULE"
+Delay = "Delay"
+
+StartDate = "START DATE"
+EndDate = "END DATE"
+
+Total = "Total"
 

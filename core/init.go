@@ -44,7 +44,7 @@ func InitServer(db *sql.DB) {
 
 	//Reporte
 	reporteUtil := _reporteUtil.New(colorPalette,textSizes,locale)
-	reporteGenerator := _reporteGenerator.New(reporteUtil, logger)
+	reporteGenerator := _reporteGenerator.New(reporteUtil, logger,locale)
 	reporteRepo := _reporteRepo.NewRepoReporte(db)
 	reporteUcase := _reporteUsecase.NewUseCase(
 		timeoutContext,
