@@ -1,18 +1,21 @@
-Name = "NAME" 
-TimePeriod = "TIME PERIOD"
-Place = "PLACE"
-Area = "AREA"
+Name = "NOMBRE"
+TimePeriod = "PERIODO DE TIEMPO"
+Place = "SITIO"
+Area = "ÁREA"
 
-Date = "DATE"
+Date = "FECHA"
 Markings = "MARCACIONES"
-Schedule = "SCHEDULE"
-HoursWorked = "HOURS WORKED"
-TotalHours = "TOTAL HOURS"
-TotalHoursWorkedInSchedule = "TOTAL HOURS IN SCHEDULE"
-Delay = "Delay"
+Schedule = "HORARIO"
+HoursWorked = "HRS. TRABAJADAS"
+TotalHours = "HRS. ASIGNADAS"
+TotalHoursWorkedInSchedule = "HRS. CUMPLIDAS"
+Delay = "RETRASO"
+Delay2 = "RETRASO2"
 
-StartDate = "START DATE"
-EndDate = "END DATE"
+
+StartDate = "FECHA INICIO"
+EndDate = "FECHA FIN"
 
 Total = "Total"
+
 

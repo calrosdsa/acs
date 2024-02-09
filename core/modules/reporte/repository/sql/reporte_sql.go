@@ -20,12 +20,20 @@ func NewRepoReporte(db *sql.DB) _r.ReporteRepo {
 	}
 }
 
+func (m *repoReporte) GetMarcacionesForReport(ctx context.Context,d _r.ReporteRequest)(res []_r.MarcacionItem,err error){
+	query := `select id,fecha,typeMarcacion,CAST(CONVERT(VARCHAR,fecha,110) AS DATE) AS DATE
+	 from TMarcacionAsistencia where cardholderGuid = @p1 and fecha >= @p2 AND
+	fecha <= @p3 order by fecha`
+	res,err = m.fetchMarcaciones(ctx,query,d.CHGuid,d.StartDate,d.EndDate)
+	return
+}
 func (m *repoReporte) GetReportEmploye(ctx context.Context, d _r.ReporteRequest) (res []_r.Asistencia, err error) {
 	var query string
-	query = `select id,asistenciaDate,marcaciones,horario,hrsTotales,hrsTrabajadas,hrsTrabajadasEnHorario,retraso,
-	countMarcaciones,countTurnos
-	from TAsistencia where cardholderGuid = @p1`
-	res, err = m.fetchAsistenciasUser(ctx, query, d.CHGuid)
+	query = `select id,asistenciaDate,marcaciones,horario,hrsTotales,hrsTrabajadas,hrsTrabajadasEnHorario,hrsExcedentes,
+	retraso, retraso2  ,countMarcaciones,countTurnos
+	from TAsistencia where cardholderGuid = @p1 and asistenciaDate >= @p2 AND
+	asistenciaDate <= @p3`
+	res, err = m.fetchAsistenciasUser(ctx, query, d.CHGuid,d.StartDate,d.EndDate)
 	if err != nil {
 		return
 	}
@@ -69,6 +77,31 @@ func (p *repoReporte) GetReporteEmpleado(ctx context.Context) (res []_r.Data, ho
 	return
 }
 
+func (p *repoReporte) fetchMarcaciones(ctx context.Context, query string, args ...interface{}) (res []_r.MarcacionItem, err error) {
+	rows, err := p.Conn.QueryContext(ctx, query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		errRow := rows.Close()
+		if errRow != nil {
+			log.Println(errRow)
+		}
+	}()
+	res = make([]_r.MarcacionItem, 0)
+	for rows.Next() {
+		t := _r.MarcacionItem{}
+		err = rows.Scan(
+			&t.Id,
+			&t.Date,
+			&t.TypeMarcacion,
+			&t.DateString,
+		)
+		res = append(res, t)
+	}
+	return res, nil
+}
+
 func (p *repoReporte) fetchAsistenciasUser(ctx context.Context, query string, args ...interface{}) (res []_r.Asistencia, err error) {
 	rows, err := p.Conn.QueryContext(ctx, query, args...)
 	if err != nil {
@@ -91,7 +124,9 @@ func (p *repoReporte) fetchAsistenciasUser(ctx context.Context, query string, ar
 			&t.HrsTotales,
 			&t.HrsTrabajadas,
 			&t.HrsTrabajadasEnHorario,
+			&t.HrsExcedentes,
 			&t.Retraso,
+			&t.Retraso2,
 			&t.CountMarcaciones,
 			&t.CountTurnos,
 		)

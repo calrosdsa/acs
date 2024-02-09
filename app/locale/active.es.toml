@@ -9,11 +9,19 @@ Schedule = "HORARIO"
 HoursWorked = "HRS. TRABAJADAS"
 TotalHours = "HRS. ASIGNADAS"
 TotalHoursWorkedInSchedule = "HRS. CUMPLIDAS"
+ExcessHours = "EXCESO DE HORAS"
 Delay = "RETRASO"
+Delay2 = "RETRASO2"
+
 
 StartDate = "FECHA INICIO"
 EndDate = "FECHA FIN"
 
 Total = "Total"
+
+
+Entrance = "ENTRADA"
+Exit    = "SALIDA"
+
 
 

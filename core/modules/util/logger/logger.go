@@ -19,6 +19,11 @@ func New() _r.Logger {
 
 func (l logger) LogError(method string, file string, err error) {
 	log.Println(err)
+	if _, err = os.Stat("./log"); os.IsNotExist(err) {
+		err = os.Mkdir("./log", os.ModePerm)
+		log.Println(err)
+		// TODO: handle error
+	}
 	now := time.Now()
 	t := fmt.Sprintf("%slog/%s-%s-%s", viper.GetString("path"), strconv.Itoa(now.Year()), now.Month().String(), strconv.Itoa(now.Day()))
 	f, errL := os.OpenFile(t, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)

@@ -16,11 +16,13 @@ type Data struct {
 	TimesString string
 	TypesString string `json:"typesString"`
 
-	HorasTrabajadas []time.Duration `json:"horas_trabajadas"`
-	Horario         []Horario       `json:"horario"`
-	Total           time.Duration
-	TotalHrsWorked  time.Duration
-	Retraso         time.Duration
+	HorasTrabajadas          []time.Duration `json:"horas_trabajadas"`
+	Horario                  []Horario       `json:"horario"`
+	HorasRestantes           time.Duration   `json:"horas_restantes"`
+	HorasAsignadas           time.Duration
+	TotalHrsWorkedInSchedule time.Duration
+	Retraso                  time.Duration
+	Retraso2                 time.Duration
 
 	FirstM *string
 	LastM  *string
@@ -58,12 +60,14 @@ type MarcacionData struct {
 type ReporteRepo interface {
 	// GetReporteEmpleado(ctx context.Context) (res []Data, horario []Horario, err error)
 	GetReportEmploye(ctx context.Context, d ReporteRequest) (res []Asistencia, err error)
+	GetMarcacionesForReport(ctx context.Context,d ReporteRequest)(res []MarcacionItem,err error)
 
 	// GetReporteEmpleado(ctx context.Context) (res []Data, horario []Horario, err error)
 }
 
 type ReporteUseCase interface {
 	GetReportEmploye(ctx context.Context, d ReporteRequest, buffer *bytes.Buffer) (err error)
+	// GetMarcacionesForReport(ctx context.Context,d ReporteRequest, buffer *bytes.Buffer)(err error)
 	// GetReporteEmpleado(ctx context.Context, buffer *bytes.Buffer, d TMarcacionAsistencia) (err error)
 }
 
@@ -78,20 +82,8 @@ type ReportInfo struct {
 type ReporteRequest struct {
 	CHGuid string `json:"cardHolderGuid"`
 	Lang   string `json:"lang"`
-}
-
-type TMarcacionAsistencia struct {
-	Id              int    `json:"id"`
-	AccessPointGuid string `json:"accessPointGuid"`
-	CardHolderGuid  string `json:"cardHolderGuid"`
-	CredentialGuid  string `json:"credentialGuid"`
-	DoorGuid        string `json:"doorGuid"`
-	EventType       string `json:"eventType"`
-	Fecha           string `json:"fecha"`
-	IdZona          int    `json:"idZona"`
-	TypeMarcacion   int    `json:"typeMarcacion"`
-
-	IdPerfil int `json:"idPerfil"`
-	IdArea   int `json:"idArea"`
-	IdSitio  int `json:"IdSitio"`
+	StartDate string `json:"start_date"`
+	EndDate string `json:"end_date"`
+	
+	
 }

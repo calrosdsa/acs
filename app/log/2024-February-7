@@ -1,17 +1,1 @@
-time="2024-02-07T12:07:00-06:00" level=error msg="image: unknown format" file=reporte_ucase method=GetRepoteEmploye_ReportEmploye
-time="2024-02-07T12:07:42-06:00" level=error msg="image: unknown format" file=reporte_ucase method=GetRepoteEmploye_ReportEmploye
-time="2024-02-07T13:42:09-06:00" level=error msg="unable to open tcp connection with host '172.20.20.131:1433': dial tcp 172.20.20.131:1433: i/o timeout" file=reporte_ucase method=GetRepoteEmploye
-time="2024-02-07T13:42:15-06:00" level=error msg="unable to open tcp connection with host '172.20.20.131:1433': dial tcp 172.20.20.131:1433: i/o timeout" file=reporte_ucase method=GetRepoteEmploye
-time="2024-02-07T13:42:19-06:00" level=error msg="unable to open tcp connection with host '172.20.20.131:1433': dial tcp 172.20.20.131:1433: i/o timeout" file=reporte_ucase method=GetRepoteEmploye
-time="2024-02-07T13:42:43-06:00" level=error msg="unable to open tcp connection with host '172.20.20.131:1433': dial tcp 172.20.20.131:1433: i/o timeout" file=reporte_ucase method=GetRepoteEmploye
-time="2024-02-07T13:45:49-06:00" level=error msg="unable to open tcp connection with host '172.20.20.131:1433': dial tcp 172.20.20.131:1433: i/o timeout" file=reporte_ucase method=GetRepoteEmploye
-time="2024-02-07T13:48:15-06:00" level=error msg="unable to open tcp connection with host '172.20.20.131:1433': dial tcp 172.20.20.131:1433: i/o timeout" file=reporte_ucase method=GetRepoteEmploye
-time="2024-02-07T13:49:38-06:00" level=error msg="unable to open tcp connection with host '172.20.20.131:1433': dial tcp 172.20.20.131:1433: i/o timeout" file=reporte_ucase method=GetRepoteEmploye
-time="2024-02-07T13:50:55-06:00" level=error msg="unable to open tcp connection with host '172.20.20.131:1433': dial tcp 172.20.20.131:1433: i/o timeout" file=reporte_ucase method=GetRepoteEmploye
-time="2024-02-07T13:52:06-06:00" level=error msg="unable to open tcp connection with host '172.20.20.131:1433': dial tcp 172.20.20.131:1433: i/o timeout" file=reporte_ucase method=GetRepoteEmploye
-time="2024-02-07T13:56:04-06:00" level=error msg="unable to open tcp connection with host '172.20.20.131:1433': dial tcp 172.20.20.131:1433: i/o timeout" file=reporte_ucase method=GetRepoteEmploye
-time="2024-02-07T13:58:58-06:00" level=error msg="unable to open tcp connection with host '172.20.20.131:1433': dial tcp 172.20.20.131:1433: i/o timeout" file=reporte_ucase method=GetRepoteEmploye
-time="2024-02-07T14:01:20-06:00" level=error msg="unable to open tcp connection with host '172.20.20.131:1433': dial tcp 172.20.20.131:1433: i/o timeout" file=reporte_ucase method=GetRepoteEmploye
-time="2024-02-07T14:11:45-06:00" level=error msg="unable to open tcp connection with host '172.20.20.131:1433': dial tcp 172.20.20.131:1433: i/o timeout" file=reporte_ucase method=GetRepoteEmploye
-time="2024-02-07T14:14:03-06:00" level=error msg="unable to open tcp connection with host '172.20.20.131:1433': dial tcp 172.20.20.131:1433: i/o timeout" file=reporte_ucase method=GetRepoteEmploye
-time="2024-02-07T14:15:44-06:00" level=error msg="unable to open tcp connection with host '172.20.20.131:1433': dial tcp 172.20.20.131:1433: i/o timeout" file=reporte_ucase method=GetRepoteEmploye
+time="2024-02-07T14:26:51-06:00" level=error msg="<nil>" file=reporte_ucase method=GetRepoteEmploye

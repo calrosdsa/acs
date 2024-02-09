@@ -2,48 +2,100 @@ package usecase
 
 import (
 	_r "acs/domain/repository"
+	"log"
 	// "strings"
 	// "sync"
 
 	"bytes"
 	"context"
+
 	// "log"
 	"time"
 )
 
 type reporteUseCase struct {
 	reporteRepo       _r.ReporteRepo
-	reporteGenerator _r.ReporteGenerator
+	reporteGenerator  _r.ReporteGenerator
 	asistenciaUseCase _r.AsistenciaUseCase
 	timeout           time.Duration
-	logger _r.Logger
+	logger            _r.Logger
 }
 
-func NewUseCase(timeout time.Duration, reporteRepo _r.ReporteRepo,reporteGenerator _r.ReporteGenerator,
-	 asisreporteUseCase _r.AsistenciaUseCase,logger _r.Logger) _r.ReporteUseCase {
+func NewUseCase(timeout time.Duration, reporteRepo _r.ReporteRepo, reporteGenerator _r.ReporteGenerator,
+	asisreporteUseCase _r.AsistenciaUseCase, logger _r.Logger) _r.ReporteUseCase {
 	return &reporteUseCase{
 		timeout:           timeout,
 		reporteRepo:       reporteRepo,
 		asistenciaUseCase: asisreporteUseCase,
-		logger: logger,
-		reporteGenerator: reporteGenerator,
+		logger:            logger,
+		reporteGenerator:  reporteGenerator,
 	}
 }
 
-func (u *reporteUseCase)GetReportEmploye(ctx context.Context, d _r.ReporteRequest, buffer *bytes.Buffer)(err error){
+func (u *reporteUseCase) getMarcacionesForReport(ctx context.Context, d _r.ReporteRequest) (marcacionesGroups []_r.MarcacionGroup ,err error) {
 	ctx, cancel := context.WithTimeout(ctx, u.timeout)
 	defer cancel()
-	res,err :=  u.reporteRepo.GetReportEmploye(ctx,d)
-	if err != nil {
-		u.logger.LogError("GetRepoteEmploye","reporte_ucase",err)
+	res, err := u.reporteRepo.GetMarcacionesForReport(ctx, d)
+	log.Println(res)
+	// data := []_r.MarcacionData{}
+
+	data := make(map[time.Time][]_r.MarcacionInterval)
+
+	for i := 0; i < len(res); i++ {
+		var marcacionInterval _r.MarcacionInterval
+		// formatTime
+		log.Println(i,res[i])
+		if res[i].TypeMarcacion == _r.MarcacionEntradaInt {
+			if (i+2) <= len(res) && res[i+1].TypeMarcacion == _r.MarcacionSalidaInt {
+				marcacionInterval = _r.MarcacionInterval{
+					MarcacionE: &res[i],
+					MarcacionS: &res[i+1],
+				}
+				i++
+			} else {
+				marcacionInterval = _r.MarcacionInterval{MarcacionE: &res[i]}
+			}
+		} else {
+			marcacionInterval = _r.MarcacionInterval{MarcacionS: &res[i]}
+		}
+
+		if currentValue, exist := data[res[i].DateString]; exist {
+			data[res[i].DateString] = append(currentValue, marcacionInterval)
+		} else {
+			data[res[i].DateString] = []_r.MarcacionInterval{marcacionInterval}
+		}
 	}
-	err = u.reporteGenerator.GenerateReporteEmploye(res, buffer,d.Lang)
-	if err != nil {
-		u.logger.LogError("GetRepoteEmploye_ReportEmploye","reporte_ucase",err)
+	for k,v := range data {
+		n := _r.MarcacionGroup{
+			Date: k,
+			Marcaciones: v,
+		}
+		marcacionesGroups = append(marcacionesGroups, n)
 	}
+
+
+	log.Println(marcacionesGroups)
+
 	return
 }
 
+func (u *reporteUseCase) GetReportEmploye(ctx context.Context, d _r.ReporteRequest, buffer *bytes.Buffer) (err error) {
+	ctx, cancel := context.WithTimeout(ctx, u.timeout)
+	defer cancel()
+	dataMarcaciones,err := u.getMarcacionesForReport(ctx,d)
+	if err != nil {
+		log.Println("Error to get marcaciones",err)
+	}
+	res, err := u.reporteRepo.GetReportEmploye(ctx, d)
+	if err != nil {
+		u.logger.LogError("GetRepoteEmploye", "reporte_ucase", err)
+	}
+	err = u.reporteGenerator.GenerateReporteEmploye(res,dataMarcaciones, buffer, d.Lang)
+	if err != nil {
+		u.logger.LogError("GetRepoteEmploye_ReportEmploye", "reporte_ucase", err)
+	}
+	return
+}
 
 // func (u *reporteUseCase) GetReporteEmpleado(ctx context.Context, buffer *bytes.Buffer, d _r.TMarcacionAsistencia) (err error) {
 // 	ctx, cancel := context.WithTimeout(ctx, u.timeout)
@@ -166,7 +218,6 @@ func (u *reporteUseCase)GetReportEmploye(ctx context.Context, d _r.ReporteReques
 // 		}(i)
 // 	}
 // 	wg.Wait()
-
 
 // 	return
 // }

@@ -32,17 +32,17 @@ func (h *AsistenciaHandler) GetAsistenciasUser(c echo.Context) (err error) {
 		return c.JSON(http.StatusOK, _r.ResponseMessage{Message: err.Error()})
 	}
 	response := struct {
-		NextPage int             `json:"nextPage"`
-		Results  []_r.Asistencia `json:"results"`
-		PageCount    int             `json:"pageCount"`
-		PageSize int `json:"pageSize"`
+		NextPage  int             `json:"nextPage"`
+		Results   []_r.Asistencia `json:"results"`
+		PageCount int             `json:"pageCount"`
+		PageSize  int             `json:"pageSize"`
 	}{
-		NextPage: nextPage,
-		Results: res,
-		PageCount: (count/size)+1,
-		PageSize: size,
+		NextPage:  nextPage,
+		Results:   res,
+		PageCount: (count / size) + 1,
+		PageSize:  size,
 	}
-	return c.JSON(http.StatusOK,response)
+	return c.JSON(http.StatusOK, response)
 }
 
 func (h *AsistenciaHandler) UpdateAsistenciaFromIncomingData(c echo.Context) (err error) {
@@ -52,10 +52,10 @@ func (h *AsistenciaHandler) UpdateAsistenciaFromIncomingData(c echo.Context) (er
 	if err != nil {
 		return c.JSON(http.StatusUnprocessableEntity, _r.ResponseMessage{Message: err.Error()})
 	}
-	err = h.asistenciaUCase.InsertMarcacion(ctx, data)
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, _r.ResponseMessage{Message: err.Error()})
-	}
+	// err = h.asistenciaUCase.InsertMarcacion(ctx, data)
+	// if err != nil {
+	// 	return c.JSON(http.StatusBadRequest, _r.ResponseMessage{Message: err.Error()})
+	// }
 	err = h.asistenciaUCase.UpdateAsistenciaFromIncomingData(ctx, data)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, _r.ResponseMessage{Message: err.Error()})

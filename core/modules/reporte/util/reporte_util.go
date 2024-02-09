@@ -3,7 +3,7 @@ package util
 import (
 	_r "acs/domain/repository"
 	"fmt"
-	"time"
+	// "time"
 
 	// "log"
 
@@ -185,8 +185,8 @@ func (r *reporteUtil) SetUpHeader(sheet string, f *excelize.File, d _r.ReportInf
 	return
 }
 
-func (r *reporteUtil) SetUpTotal(sheet string, f *excelize.File, totalHrsWorked, totalHrsWorkedInSchedule, totalHrsDelay time.Duration,
-	startCol, startRow, titleStyle, cellStyle int, col1, col2, col3, col4, lang string) (err error) {
+func (r *reporteUtil) SetUpTotal(sheet string, f *excelize.File,
+	startCol, startRow, titleStyle, cellStyle int, col1, col2, col3, lang string, args ...interface{}) (err error) {
 	cell, err := excelize.CoordinatesToCellName(startCol, startRow)
 	if err != nil {
 		return
@@ -194,9 +194,12 @@ func (r *reporteUtil) SetUpTotal(sheet string, f *excelize.File, totalHrsWorked,
 	if err = f.SetCellStyle(sheet, fmt.Sprintf("%s%d", col1, startRow), fmt.Sprintf("%s%d", col1, startRow), titleStyle); err != nil {
 		return
 	}
-	if err = f.SetCellStyle(sheet, fmt.Sprintf("%s%d", col2, startRow), fmt.Sprintf("%s%d", col4, startRow), cellStyle); err != nil {
+	if err = f.SetCellStyle(sheet, fmt.Sprintf("%s%d", col2, startRow), fmt.Sprintf("%s%d", col3, startRow), cellStyle); err != nil {
 		return
 	}
-	f.SetSheetRow(sheet, cell, &[]string{r.Locale.MustLocalize("Total", lang), totalHrsWorked.String(), totalHrsWorkedInSchedule.String(), totalHrsDelay.String()})
+	var vals []interface{}
+	vals = append(vals, r.Locale.MustLocalize("Total", lang))
+	vals = append(vals, args...)
+	f.SetSheetRow(sheet, cell, &vals)
 	return
 }

@@ -7,8 +7,10 @@ type Asistencia struct {
 	AsistenciaDate         string  `json:"asistenciaDate"`
 	CardHolderGuid         string  `json:"cardholderGuid"`
 	Retraso                float64 `json:"retraso"`
+	Retraso2               float64 `json:"retraso2"`
 	HrsTotales             float64 `json:"hrsTotales"`
 	HrsTrabajadas          float64 `json:"hrsTrabajadas"`
+	HrsExcedentes          float64 `json:"hrsExcedentes"`
 	HrsTrabajadasEnHorario float64 `json:"hrsTrabajadasEnHorario"`
 	Marcaciones            string  `json:"marcaciones"`
 	Horario                string  `json:"horario"`
@@ -40,4 +42,20 @@ type AsistenciaUseCase interface {
 
 	//ONLY FOR DEVELOPMENT
 	InsertMarcacion(ctx context.Context, d TMarcacionAsistencia) (err error)
+}
+
+type TMarcacionAsistencia struct {
+	Id              int    `json:"id"`
+	AccessPointGuid string `json:"accessPointGuid"`
+	CardHolderGuid  string `json:"cardHolderGuid"`
+	CredentialGuid  string `json:"credentialGuid"`
+	DoorGuid        string `json:"doorGuid"`
+	EventType       string `json:"eventType"`
+	Fecha           string `json:"fecha"`
+	IdZona          int    `json:"idZona"`
+	TypeMarcacion   int    `json:"typeMarcacion"`
+
+	IdPerfil int `json:"idPerfil"`
+	IdArea   int `json:"idArea"`
+	IdSitio  int `json:"IdSitio"`
 }

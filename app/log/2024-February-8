@@ -1,0 +1,2 @@
+time="2024-02-08T09:53:25-06:00" level=error msg="<nil>" file=asistencia_usecase method=CreateOrUpdateAsistencia_CreateAsistencia
+time="2024-02-08T12:32:56-06:00" level=error msg="<nil>" file=asistencia_usecase method=InsertMarcacion

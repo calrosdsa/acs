@@ -1,0 +1,8 @@
+No se puede tomar en cuenta la ultima marcacion de entrada con la ultima marcacion de salida:
+
+    08:00 E 12:12 S 12:30 S  =  04:30h      
+
+    08:00 E 12:10 S 18:00 S  =  10:00h
+
+
+
