@@ -60,7 +60,7 @@ type MarcacionData struct {
 type ReporteRepo interface {
 	// GetReporteEmpleado(ctx context.Context) (res []Data, horario []Horario, err error)
 	GetReportEmploye(ctx context.Context, d ReporteRequest) (res []Asistencia, err error)
-	GetMarcacionesForReport(ctx context.Context,d ReporteRequest)(res []MarcacionItem,err error)
+	GetMarcacionesForReport(ctx context.Context, d ReporteRequest) (res []MarcacionItem, err error)
 
 	// GetReporteEmpleado(ctx context.Context) (res []Data, horario []Horario, err error)
 }
@@ -80,10 +80,8 @@ type ReportInfo struct {
 }
 
 type ReporteRequest struct {
-	CHGuid string `json:"cardHolderGuid"`
-	Lang   string `json:"lang"`
+	CHGuid    string `json:"cardHolderGuid"`
+	Lang      string `json:"lang"`
 	StartDate string `json:"start_date"`
-	EndDate string `json:"end_date"`
-	
-	
+	EndDate   string `json:"end_date"`
 }
