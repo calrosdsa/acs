@@ -26,8 +26,42 @@ func New(reporteUtil _r.ReporteUtil, logger _r.Logger, locale _r.Locale) _r.Repo
 	}
 }
 
+func (r *reporteGenerator) GenerateReporteSitioGeneral(asistencia []_r.Asistencia, buffer *bytes.Buffer, lang string) (err error) {
+	return
+}
+func (r *reporteGenerator) GenerateReporteSitioEmployee(data []_r.EmployeeAsistencia, buffer *bytes.Buffer, lang string) (err error) {
+	f := excelize.NewFile()
+	defer func() {
+		if err := f.Close(); err != nil {
+			fmt.Println(err)
+		}
+	}()
+
+	f.DeleteSheet("sheet1")
+	
+	for _, employeeAsistencia := range data {
+		d := _r.ReportInfo{
+			EmployeName:  fmt.Sprintf("%s %s", employeeAsistencia.Employee.FirstName, employeeAsistencia.Employee.LastName),
+			GerenciaName: "Recursos Humanos",
+			SitioName:    "Equipetrol",
+			From:         "01-01-2024",
+			To:           "01-02-2024",
+		}
+
+		if err = r.CreateSheetEmploye(employeeAsistencia.Asistencias, d.EmployeName, f, d, lang); err != nil {
+			return
+		}
+
+	}
+	err = f.Write(buffer)
+	if err != nil {
+		log.Println(err)
+	}
+	return
+}
+
 func (r *reporteGenerator) GenerateReporteEmploye(asistencias []_r.Asistencia, dataMarcaciones []_r.MarcacionGroup,
-	buffer *bytes.Buffer, lang string) (err error) {
+	employee _r.Employee, buffer *bytes.Buffer, lang string) (err error) {
 	f := excelize.NewFile()
 	// f, err := excelize.OpenFile("./media/template.xlsx")
 	// if err != nil {
@@ -39,12 +73,9 @@ func (r *reporteGenerator) GenerateReporteEmploye(asistencias []_r.Asistencia, d
 			fmt.Println(err)
 		}
 	}()
-	// if err = f.AddPicture("Sheet1", "A1", "./petrobras-logo.jpg", nil); err != nil {
-	// 	fmt.Println(err)
-	// 	return
-	// }
+
 	d := _r.ReportInfo{
-		EmployeName:  "Jorge Daniel Miranda Lopez",
+		EmployeName:  fmt.Sprintf("%s %s", employee.FirstName, employee.LastName),
 		GerenciaName: "Recursos Humanos",
 		SitioName:    "Equipetrol",
 		From:         "01-01-2024",
@@ -214,14 +245,14 @@ func (r *reporteGenerator) CreateSheetEmploye(items []_r.Asistencia, sheet strin
 		maxMarks = 2
 	}
 
-// 	display, tooltip := "https://github.com/xuri/excelize", "Excelize on GitHub"
-// if err := f.SetCellHyperLink("Sheet1", "A3",
-//     "https://github.com/xuri/excelize", "External", excelize.HyperlinkOpts{
-//         Display: &display,
-//         Tooltip: &tooltip,
-//     }); err != nil {
-//     fmt.Println(err)
-// }
+	// 	display, tooltip := "https://github.com/xuri/excelize", "Excelize on GitHub"
+	// if err := f.SetCellHyperLink("Sheet1", "A3",
+	//     "https://github.com/xuri/excelize", "External", excelize.HyperlinkOpts{
+	//         Display: &display,
+	//         Tooltip: &tooltip,
+	//     }); err != nil {
+	//     fmt.Println(err)
+	// }
 
 	f.SetColWidth(sheet, "A", "A", 5)
 	f.SetColWidth(sheet, "B", "B", 13)

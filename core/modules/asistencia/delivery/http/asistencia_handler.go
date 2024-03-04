@@ -52,10 +52,10 @@ func (h *AsistenciaHandler) UpdateAsistenciaFromIncomingData(c echo.Context) (er
 	if err != nil {
 		return c.JSON(http.StatusUnprocessableEntity, _r.ResponseMessage{Message: err.Error()})
 	}
-	// err = h.asistenciaUCase.InsertMarcacion(ctx, data)
-	// if err != nil {
-	// 	return c.JSON(http.StatusBadRequest, _r.ResponseMessage{Message: err.Error()})
-	// }
+	err = h.asistenciaUCase.InsertMarcacion(ctx, data)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, _r.ResponseMessage{Message: err.Error()})
+	}
 	err = h.asistenciaUCase.UpdateAsistenciaFromIncomingData(ctx, data)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, _r.ResponseMessage{Message: err.Error()})

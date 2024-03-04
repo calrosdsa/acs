@@ -18,8 +18,14 @@ create table TAsistencia(
     horario varchar(255),
     countMarcaciones int,
     countTurnos int,
+
+	idArea int,
+	idSitio int,
+	doorGuid VARCHAR(100)
     PRIMARY KEY (id,asistenciaDate)
 );
+
+
 
 
 

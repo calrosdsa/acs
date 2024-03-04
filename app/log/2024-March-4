@@ -1,0 +1,4 @@
+time="2024-03-04T14:32:09-06:00" level=error msg="<nil>" file=asistencia_usecase method=CreateOrUpdateAsistencia_CreateAsistencia
+time="2024-03-04T14:32:43-06:00" level=error msg="<nil>" file=asistencia_usecase method=CreateOrUpdateAsistencia_CreateAsistencia
+time="2024-03-04T14:32:50-06:00" level=error msg="<nil>" file=asistencia_usecase method=CreateOrUpdateAsistencia_CreateAsistencia
+time="2024-03-04T14:34:09-06:00" level=error msg="<nil>" file=asistencia_usecase method=InsertMarcacion

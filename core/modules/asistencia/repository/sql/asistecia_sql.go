@@ -37,11 +37,12 @@ func (m *asistenciaRepository) GetAsistenciasUser(ctx context.Context, chGuid st
 func (m *asistenciaRepository) CreateAsistencia(ctx context.Context, d _r.Asistencia) (err error) {
 	log.Println(d)
 	query := `insert into TAsistencia(asistenciaDate,cardholderGuid,retraso,retraso2,hrsTotales,hrsTrabajadas,hrsTrabajadasEnHorario,
-		marcaciones,horario,countMarcaciones,countTurnos) values(@p1,@p2,@p3,@p4,@p5,@p6,@p7,@p8,@p9,@p10,@p11)`
+		marcaciones,horario,countMarcaciones,countTurnos,idSitio,idArea,doorGuid)
+		values(@p1,@p2,@p3,@p4,@p5,@p6,@p7,@p8,@p9,@p10,@p11,@p12,@p13,@p14)`
 	// marcaciones,horario) values(@p1,@p2,@p3,@p4,@p5,@p6,@p7,@p8)`
 
 	_, err = m.Conn.ExecContext(ctx, query, d.AsistenciaDate, d.CardHolderGuid, d.Retraso,d.Retraso2, d.HrsTotales, d.HrsTrabajadas,
-		d.HrsTrabajadasEnHorario, d.Marcaciones, d.Horario, d.CountMarcaciones, d.CountTurnos)
+		d.HrsTrabajadasEnHorario, d.Marcaciones, d.Horario, d.CountMarcaciones, d.CountTurnos,d.IdSitio,d.IdArea,d.DoorGuid)
 	return
 }
 

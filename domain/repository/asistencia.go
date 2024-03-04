@@ -16,6 +16,9 @@ type Asistencia struct {
 	Horario                string  `json:"horario"`
 	CountTurnos            int     `json:"countTurnos"`
 	CountMarcaciones       int     `json:"countMarcaciones"`
+	IdSitio                int     `json:"idSitio"`
+	IdArea                 int     `json:"idArea"`
+	DoorGuid               string  `json:"doorGuid"`
 }
 
 type AsistenciaRepository interface {
@@ -55,7 +58,7 @@ type TMarcacionAsistencia struct {
 	IdZona          int    `json:"idZona"`
 	TypeMarcacion   int    `json:"typeMarcacion"`
 
-	IdPerfil int `json:"idPerfil"`
+	// IdPerfil int `json:"idPerfil"`
 	IdArea   int `json:"idArea"`
 	IdSitio  int `json:"IdSitio"`
 }

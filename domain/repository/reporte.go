@@ -61,12 +61,22 @@ type ReporteRepo interface {
 	// GetReporteEmpleado(ctx context.Context) (res []Data, horario []Horario, err error)
 	GetReportEmploye(ctx context.Context, d ReporteRequest) (res []Asistencia, err error)
 	GetMarcacionesForReport(ctx context.Context, d ReporteRequest) (res []MarcacionItem, err error)
+	GetEmpleadoCardHolder(ctx context.Context, guid string) (res Employee, err error)
+
+	GetEmployeesSitio(ctx context.Context,idSitio int)(res []Employee,err error)
 
 	// GetReporteEmpleado(ctx context.Context) (res []Data, horario []Horario, err error)
 }
 
 type ReporteUseCase interface {
 	GetReportEmploye(ctx context.Context, d ReporteRequest, buffer *bytes.Buffer) (err error)
+
+	GetReporteSitio(ctx context.Context, d ReporteRequest, buffer *bytes.Buffer) (err error)
+
+	GetReporteArea(ctx context.Context, d ReporteRequest, buffer *bytes.Buffer) (err error)
+
+	GetReporte(ctx context.Context, d ReporteRequest, buffer *bytes.Buffer) (err error)
+
 	// GetMarcacionesForReport(ctx context.Context,d ReporteRequest, buffer *bytes.Buffer)(err error)
 	// GetReporteEmpleado(ctx context.Context, buffer *bytes.Buffer, d TMarcacionAsistencia) (err error)
 }
@@ -80,8 +90,27 @@ type ReportInfo struct {
 }
 
 type ReporteRequest struct {
-	CHGuid    string `json:"cardHolderGuid"`
-	Lang      string `json:"lang"`
-	StartDate string `json:"start_date"`
-	EndDate   string `json:"end_date"`
+	CHGuid        string        `json:"cardHolderGuid"`
+	Lang          string        `json:"lang"`
+	StartDate     string        `json:"startDate"`
+	EndDate       string        `json:"endDate"`
+	ReporteType   ReporteType   `json:"reporteType"`
+	ReporteFormat ReporteFormat `json:"reporteFormat"`
+	IdSitio       int           `json:"idSitio"`
+	IdArea        int           `json:"idArea"`
 }
+
+type ReporteType byte
+
+const (
+	REPORTE_EMPLOYEE = 1
+	REPORTE_AREA     = 2
+	REPORTE_SITIO    = 3
+)
+
+type ReporteFormat byte
+
+const (
+	EMPLOYEE_FORMAT = 1
+	GENERAL_FORMAT  = 2
+)

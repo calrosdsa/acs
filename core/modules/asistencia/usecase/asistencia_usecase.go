@@ -238,6 +238,9 @@ func (u *asistenciaUseCase) UpdateAsistenciaFromIncomingData(ctx context.Context
 		CountTurnos:            maxTurnos,
 		CountMarcaciones:       maxMarks,
 	}
+	asistencia.IdSitio = d.IdSitio
+	asistencia.IdArea = d.IdArea
+	asistencia.DoorGuid = d.DoorGuid
 	u.CreateOrUpdateAsistencia(context.Background(), asistencia)
 	return
 }
