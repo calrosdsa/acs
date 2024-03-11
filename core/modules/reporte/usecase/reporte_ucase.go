@@ -2,7 +2,9 @@ package usecase
 
 import (
 	_r "acs/domain/repository"
+	"fmt"
 	"log"
+
 	// "strings"
 	// "sync"
 
@@ -19,16 +21,18 @@ type reporteUseCase struct {
 	asistenciaUseCase _r.AsistenciaUseCase
 	timeout           time.Duration
 	logger            _r.Logger
+	locale      _r.Locale
 }
 
 func NewUseCase(timeout time.Duration, reporteRepo _r.ReporteRepo, reporteGenerator _r.ReporteGenerator,
-	asisreporteUseCase _r.AsistenciaUseCase, logger _r.Logger) _r.ReporteUseCase {
+	asisreporteUseCase _r.AsistenciaUseCase, logger _r.Logger,locale _r.Locale) _r.ReporteUseCase {
 	return &reporteUseCase{
 		timeout:           timeout,
 		reporteRepo:       reporteRepo,
 		asistenciaUseCase: asisreporteUseCase,
 		logger:            logger,
 		reporteGenerator:  reporteGenerator,
+		locale: locale,
 	}
 }
 
@@ -105,30 +109,62 @@ func (u *reporteUseCase) GetReporte(ctx context.Context, d _r.ReporteRequest, bu
 func (u *reporteUseCase) GetReporteSitio(ctx context.Context, d _r.ReporteRequest, buffer *bytes.Buffer) (err error) {
 	ctx, cancel := context.WithTimeout(ctx, u.timeout)
 	defer cancel()
-	employees, err := u.reporteRepo.GetEmployeesSitio(ctx, d.IdSitio)
+	sitio,err := u.reporteRepo.GetSitio(ctx,d.IdSitio)
 	if err != nil {
-		u.logger.LogError("GetReporteSitio.GetEmployeesSitio", "reporte_ucase", err)
+		u.logger.LogError("GetReporteSitio.GetSitio", "reporte_ucase", err)
 	}
-	switch(d.ReporteFormat){
+	switch d.ReporteFormat {
 	case _r.EMPLOYEE_FORMAT:
+		employees, err1 := u.reporteRepo.GetEmployeesSitio(ctx, d.IdSitio)
+		log.Println("EMPLOYEES", employees)
+		if err1 != nil {
+			u.logger.LogError("GetReporteSitio.GetEmployeesSitio", "reporte_ucase", err1)
+			return err1
+		}
 		var employeeAsistencia []_r.EmployeeAsistencia
-		for _,employee := range employees {
-			asistencias, err := u.reporteRepo.GetReportEmploye(ctx, d)
+		for _, employee := range employees {
+			d.CHGuid = employee.CardHolderGuid
+			asistencias, err := u.reporteRepo.GetAsistenciaEmployee(ctx, d)
 			if err != nil {
 				u.logger.LogError("GetReporteSitio.GetRepoteEmploye", "reporte_ucase", err)
 			}
 			t := _r.EmployeeAsistencia{
 				Asistencias: asistencias,
-				Employee: employee,
+				Employee:    employee,
 			}
 			employeeAsistencia = append(employeeAsistencia, t)
 		}
-		err = u.reporteGenerator.GenerateReporteSitioEmployee(employeeAsistencia,buffer,d.Lang)
+		info := _r.ReportInfo{
+			SitioName:     sitio.Name,
+			From:          d.StartDate,
+			To:            d.EndDate,
+			ReporteType:   d.ReporteType,
+			ReporteFormat: d.ReporteFormat,
+		}
+		err = u.reporteGenerator.GenerateReporteSitioEmployees(info, employeeAsistencia, buffer, d.Lang)
 		if err != nil {
 			u.logger.LogError("GetReporteSitio.GenerateReporteSitioEmployee", "reporte_ucase", err)
 			return
 		}
 	case _r.GENERAL_FORMAT:
+		asistencias, err := u.reporteRepo.GetAsistenciaEmployeeSitio(ctx, d)
+		if err != nil {
+			u.logger.LogError("GetReporteSitio.GetAsistenciaEmployeArea", "reporte_ucase", err)
+			return err
+		}		
+		info := _r.ReportInfo{
+			SitioName:     sitio.Name,
+			AreaName: u.locale.MustLocalize("AllAreas",d.Lang),
+			From:          d.StartDate,
+			To:            d.EndDate,
+			ReporteType:   d.ReporteType,
+			ReporteFormat: d.ReporteFormat,
+		}
+		err = u.reporteGenerator.GenerateReporteSitioGeneral(info, asistencias, buffer, d.Lang)
+		if err != nil {
+			u.logger.LogError("GetReporteSitio.GenerateReporteSitioEmployee", "reporte_ucase", err)
+			return err
+		}
 
 	}
 	return
@@ -137,7 +173,73 @@ func (u *reporteUseCase) GetReporteSitio(ctx context.Context, d _r.ReporteReques
 func (u *reporteUseCase) GetReporteArea(ctx context.Context, d _r.ReporteRequest, buffer *bytes.Buffer) (err error) {
 	ctx, cancel := context.WithTimeout(ctx, u.timeout)
 	defer cancel()
+	area,err := u.reporteRepo.GetArea(ctx,d.IdArea)
+	if err != nil {
+		u.logger.LogError("GetReporteSitio.GetArea", "reporte_ucase", err)
+	}
+	switch d.ReporteFormat {
+	case _r.EMPLOYEE_FORMAT:
+		employees, err1 := u.reporteRepo.GetEmployeesArea(ctx, d.IdArea,d.ALLSitios, d.IdSitio)
+		if err1 != nil {
+			u.logger.LogError("GetReporteSitio.GetEmployeesArea", "reporte_ucase", err1)
+			return err1
+		}
+		var employeeAsistencia []_r.EmployeeAsistencia
+		for _, employee := range employees {
+			d.CHGuid = employee.CardHolderGuid
+			asistencias, err := u.reporteRepo.GetAsistenciaEmployee(ctx, d)
+			if err != nil {
+				u.logger.LogError("GetReporteSitio.GetRepoteEmploye", "reporte_ucase", err)
+			}
+			t := _r.EmployeeAsistencia{
+				Asistencias: asistencias,
+				Employee:    employee,
+			}
+			employeeAsistencia = append(employeeAsistencia, t)
+		}
+		info := _r.ReportInfo{
+			AreaName:      area.Name,
+			// SitioName:     sitio.Name,
+			From:          d.StartDate,
+			To:            d.EndDate,
+			ReporteType:   d.ReporteType,
+			ReporteFormat: d.ReporteFormat,
+		}
+		err = u.reporteGenerator.GenerateReporteAreaEmployees(info, employeeAsistencia, buffer, d.Lang)
+		if err != nil {
+			u.logger.LogError("GetReporteSitio.GenerateReporteSitioEmployee", "reporte_ucase", err)
+			return
+		}
+	case _r.GENERAL_FORMAT:
+		asistencias, err := u.reporteRepo.GetAsistenciaEmployeeArea(ctx, d)
+		if err != nil {
+			u.logger.LogError("GetReporteSitio.GetAsistenciaEmployeArea", "reporte_ucase", err)
+			return err
+		}
+		var sitio _r.Sitio
+		if d.ALLSitios {
+			sitio = _r.Sitio{Name: u.locale.MustLocalize("AllPlaces", d.Lang)}
+		}else{
+			sitio,err = u.reporteRepo.GetSitio(ctx,d.IdSitio)
+			if err != nil {
+				u.logger.LogError("GetReporteSitio.GetSitio", "reporte_ucase", err)
+			}
+		}
+		info := _r.ReportInfo{
+			AreaName:      area.Name,
+			SitioName:     sitio.Name,
+			From:          d.StartDate,
+			To:            d.EndDate,
+			ReporteType:   d.ReporteType,
+			ReporteFormat: d.ReporteFormat,
+		}
+		err = u.reporteGenerator.GenerateReporteAreaGeneral(info, asistencias, buffer, d.Lang)
+		if err != nil {
+			u.logger.LogError("GetReporteSitio.GenerateReporteSitioEmployee", "reporte_ucase", err)
+			return err
+		}
 
+	}
 	return
 }
 
@@ -152,11 +254,20 @@ func (u *reporteUseCase) GetReportEmploye(ctx context.Context, d _r.ReporteReque
 	if err != nil {
 		u.logger.LogError("GetRepoteEmploye.getMarcacionesForReport", "reporte_ucase", err)
 	}
-	res, err := u.reporteRepo.GetReportEmploye(ctx, d)
+	res, err := u.reporteRepo.GetAsistenciaEmployee(ctx, d)
 	if err != nil {
 		u.logger.LogError("GetRepoteEmploye", "reporte_ucase", err)
 	}
-	err = u.reporteGenerator.GenerateReporteEmploye(res, dataMarcaciones, employee, buffer, d.Lang)
+	info := _r.ReportInfo{
+		EmployeName:   fmt.Sprintf("%s %s", employee.FirstName, employee.LastName),
+		AreaName:      employee.Area,
+		SitioName:     employee.Sitio,
+		From:          d.StartDate,
+		To:            d.EndDate,
+		ReporteType:   d.ReporteType,
+		ReporteFormat: d.ReporteFormat,
+	}
+	err = u.reporteGenerator.GenerateReporteEmploye(info, res, dataMarcaciones, buffer, d.Lang)
 	if err != nil {
 		u.logger.LogError("GetRepoteEmploye_ReportEmploye", "reporte_ucase", err)
 	}

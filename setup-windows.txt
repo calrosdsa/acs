@@ -1,0 +1,8 @@
+1.- Install nssm:
+ - https://nssm.cc/ci/nssm-2.24-101-g897c7ad.zip
+2.- Add */win64 to System variables Path
+3.- Run cmd as administrator
+4.- Create service with:
+ - nssm install [ServiceName] "PATH/"
+5.- Start service with: 
+ - nssm start [ServiceName] 

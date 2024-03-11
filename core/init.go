@@ -52,6 +52,7 @@ func InitServer(db *sql.DB) {
 		reporteGenerator,
 		assistenciaUcase,
 		logger,
+		locale,
 	)
 
 	_reporteHttp.NewHandler(e, reporteUcase)

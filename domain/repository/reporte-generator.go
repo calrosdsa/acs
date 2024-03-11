@@ -14,12 +14,16 @@ type EmployeeAsistencia struct {
 }
 
 type ReporteGenerator interface {
-	GenerateReporteEmploye(asistencias []Asistencia, dataMarcaciones []MarcacionGroup, employee Employee,
+	GenerateReporteEmploye(info ReportInfo ,asistencias []Asistencia, dataMarcaciones []MarcacionGroup,
 		buffer *bytes.Buffer, lang string) (err error)
 	//REPORTE QUE MUESTRA TODOS LAS ASISTENCIAS EN UNA SOLA HOJA DE EXCEL	
-	GenerateReporteSitioGeneral(asistencia []Asistencia, buffer *bytes.Buffer, lang string)(err error)
+	GenerateReporteSitioGeneral(info ReportInfo,asistencia []Asistencia, buffer *bytes.Buffer, lang string)(err error)
+	GenerateReporteAreaGeneral(info ReportInfo,asistencia []Asistencia, buffer *bytes.Buffer, lang string)(err error)
+
 	//REPORTE QUE MUESTRA LAS ASISTENCIAS DE LOS USUARIOS EN DIFERENTES HOJAS 
-	GenerateReporteSitioEmployee(asistencia []EmployeeAsistencia, buffer *bytes.Buffer, lang string)(err error)
+	GenerateReporteSitioEmployees(info ReportInfo,asistencia []EmployeeAsistencia, buffer *bytes.Buffer, lang string)(err error)
+	GenerateReporteAreaEmployees(info ReportInfo,asistencia []EmployeeAsistencia, buffer *bytes.Buffer, lang string)(err error)
+
 }
 
 type ReporteUtil interface {

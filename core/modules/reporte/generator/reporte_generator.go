@@ -26,33 +26,21 @@ func New(reporteUtil _r.ReporteUtil, logger _r.Logger, locale _r.Locale) _r.Repo
 	}
 }
 
-func (r *reporteGenerator) GenerateReporteSitioGeneral(asistencia []_r.Asistencia, buffer *bytes.Buffer, lang string) (err error) {
-	return
-}
-func (r *reporteGenerator) GenerateReporteSitioEmployee(data []_r.EmployeeAsistencia, buffer *bytes.Buffer, lang string) (err error) {
+func (r *reporteGenerator) GenerateReporteSitioEmployees(info _r.ReportInfo, data []_r.EmployeeAsistencia, buffer *bytes.Buffer, lang string) (err error) {
 	f := excelize.NewFile()
 	defer func() {
 		if err := f.Close(); err != nil {
 			fmt.Println(err)
 		}
 	}()
-
-	f.DeleteSheet("sheet1")
-	
 	for _, employeeAsistencia := range data {
-		d := _r.ReportInfo{
-			EmployeName:  fmt.Sprintf("%s %s", employeeAsistencia.Employee.FirstName, employeeAsistencia.Employee.LastName),
-			GerenciaName: "Recursos Humanos",
-			SitioName:    "Equipetrol",
-			From:         "01-01-2024",
-			To:           "01-02-2024",
-		}
-
-		if err = r.CreateSheetEmploye(employeeAsistencia.Asistencias, d.EmployeName, f, d, lang); err != nil {
+		info.EmployeName = fmt.Sprintf("%s %s", employeeAsistencia.Employee.FirstName, employeeAsistencia.Employee.LastName)
+		info.AreaName = employeeAsistencia.Employee.Area
+		if err = r.CreateSheetEmploye(employeeAsistencia.Asistencias, info.EmployeName, f, info, lang); err != nil {
 			return
 		}
-
 	}
+	f.DeleteSheet("sheet1")
 	err = f.Write(buffer)
 	if err != nil {
 		log.Println(err)
@@ -60,31 +48,76 @@ func (r *reporteGenerator) GenerateReporteSitioEmployee(data []_r.EmployeeAsiste
 	return
 }
 
-func (r *reporteGenerator) GenerateReporteEmploye(asistencias []_r.Asistencia, dataMarcaciones []_r.MarcacionGroup,
-	employee _r.Employee, buffer *bytes.Buffer, lang string) (err error) {
+func (r *reporteGenerator) GenerateReporteAreaEmployees(info _r.ReportInfo, data []_r.EmployeeAsistencia, buffer *bytes.Buffer, lang string) (err error) {
 	f := excelize.NewFile()
-	// f, err := excelize.OpenFile("./media/template.xlsx")
-	// if err != nil {
-	// 	fmt.Println(err)
-	// 	return
-	// }
 	defer func() {
 		if err := f.Close(); err != nil {
 			fmt.Println(err)
 		}
 	}()
-
-	d := _r.ReportInfo{
-		EmployeName:  fmt.Sprintf("%s %s", employee.FirstName, employee.LastName),
-		GerenciaName: "Recursos Humanos",
-		SitioName:    "Equipetrol",
-		From:         "01-01-2024",
-		To:           "01-02-2024",
+	for _, employeeAsistencia := range data {
+		info.EmployeName = fmt.Sprintf("%s %s", employeeAsistencia.Employee.FirstName, employeeAsistencia.Employee.LastName)
+		info.SitioName = employeeAsistencia.Employee.Sitio
+		if err = r.CreateSheetEmploye(employeeAsistencia.Asistencias, info.EmployeName, f, info, lang); err != nil {
+			return
+		}
 	}
-	if err = r.CreateSheetEmploye(asistencias, d.EmployeName, f, d, lang); err != nil {
+	f.DeleteSheet("sheet1")
+	err = f.Write(buffer)
+	if err != nil {
+		log.Println(err)
+	}
+	return
+}
+
+func (r *reporteGenerator) GenerateReporteAreaGeneral(info _r.ReportInfo, asistencias []_r.Asistencia, buffer *bytes.Buffer, lang string) (err error) {
+	f := excelize.NewFile()
+	defer func() {
+		if err := f.Close(); err != nil {
+			fmt.Println(err)
+		}
+	}()
+	if err = r.CreateSheetEmployeArea(asistencias, info.AreaName, f, info, lang); err != nil {
 		return
 	}
-	if err = r.CreateSheetMarcaciones("Marcaciones", f, dataMarcaciones, d, lang); err != nil {
+	f.DeleteSheet("sheet1")
+	err = f.Write(buffer)
+	if err != nil {
+		log.Println(err)
+	}
+	return
+}
+
+func (r *reporteGenerator) GenerateReporteSitioGeneral(info _r.ReportInfo, asistencias []_r.Asistencia, buffer *bytes.Buffer, lang string) (err error) {
+	f := excelize.NewFile()
+	defer func() {
+		if err := f.Close(); err != nil {
+			fmt.Println(err)
+		}
+	}()
+	if err = r.CreateSheetEmployeSitio(asistencias, info.SitioName, f, info, lang); err != nil {
+		return
+	}
+	f.DeleteSheet("sheet1")
+	err = f.Write(buffer)
+	if err != nil {
+		log.Println(err)
+	}
+	return
+}
+
+func (r *reporteGenerator) GenerateReporteEmploye(info _r.ReportInfo, asistencias []_r.Asistencia, dataMarcaciones []_r.MarcacionGroup,
+	buffer *bytes.Buffer, lang string) (err error) {
+	f := excelize.NewFile()
+	defer func() {
+		if err := f.Close(); err != nil {
+			fmt.Println(err)
+		}
+	}()
+	if err = r.CreateSheetEmploye(asistencias, info.EmployeName, f, info, lang); err != nil {
+		return
+	}
+	if err = r.CreateSheetMarcaciones("Marcaciones", f, dataMarcaciones, info, lang); err != nil {
 		return
 	}
 	f.DeleteSheet("sheet1")
@@ -192,14 +225,10 @@ func (r *reporteGenerator) CreateSheetMarcaciones(sheet string, f *excelize.File
 
 	return
 }
-func mergeCells() {
-
-}
 
 func (r *reporteGenerator) CreateSheetEmploye(items []_r.Asistencia, sheet string, f *excelize.File, d _r.ReportInfo, lang string) (err error) {
 	var (
 		maxMarks        int
-		maxTurnos       int
 		cellStyle       int
 		cellCenterStyle int
 		titleStyle      int
@@ -217,9 +246,7 @@ func (r *reporteGenerator) CreateSheetEmploye(items []_r.Asistencia, sheet strin
 		if items[i].CountMarcaciones > maxMarks {
 			maxMarks = items[i].CountMarcaciones
 		}
-		if items[i].CountTurnos > maxTurnos {
-			maxTurnos = items[i].CountTurnos
-		}
+
 	}
 
 	f.NewSheet(sheet)
@@ -327,6 +354,298 @@ func (r *reporteGenerator) CreateSheetEmploye(items []_r.Asistencia, sheet strin
 		f,
 		5, (startRow + len(items) + 1), titleStyle2, cellStyle,
 		"E", "F", "J",
+		lang,
+		totalHrsWorkedInSchedule.String(),
+		totalHrsWorked.String(),
+		totalHrsExcedentes.String(),
+		totalHrsDelay.String(),
+		totalHrsDelay2.String(),
+	); err != nil {
+		return
+	}
+
+	return
+}
+
+func (r *reporteGenerator) CreateSheetEmployeSitio(items []_r.Asistencia, sheet string, f *excelize.File, d _r.ReportInfo, lang string) (err error) {
+	var (
+		maxMarks        int
+		cellStyle       int
+		cellCenterStyle int
+		titleStyle      int
+		titleStyle2     int
+		cell            string
+
+		totalHrsWorked           time.Duration
+		totalHrsWorkedInSchedule time.Duration
+		totalHrsExcedentes       time.Duration
+		totalHrsDelay            time.Duration
+		totalHrsDelay2           time.Duration
+	)
+
+	for i := 0; i < len(items); i++ {
+		if items[i].CountMarcaciones > maxMarks {
+			maxMarks = items[i].CountMarcaciones
+		}
+	}
+
+	f.NewSheet(sheet)
+	r.reporteUtil.SetUpReporteLayout(sheet, f)
+	if titleStyle, err = r.reporteUtil.GetTitleStyle(f); err != nil {
+		return
+	}
+	if titleStyle2, err = r.reporteUtil.GetTitleStyle2(f); err != nil {
+		return
+	}
+	if cellStyle, err = r.reporteUtil.GetCommonCellStyle(f); err != nil {
+		return
+	}
+	if cellCenterStyle, err = r.reporteUtil.GetCellCenterStyle(f); err != nil {
+		return
+	}
+
+	//INFO
+	if err = r.reporteUtil.SetUpHeader(sheet, f, d, titleStyle, titleStyle2, cellCenterStyle, cellStyle, lang); err != nil {
+		return
+	}
+	if maxMarks == 0 || maxMarks == 1 {
+		maxMarks = 2
+	}
+
+	// 	display, tooltip := "https://github.com/xuri/excelize", "Excelize on GitHub"
+	// if err := f.SetCellHyperLink("Sheet1", "A3",
+	//     "https://github.com/xuri/excelize", "External", excelize.HyperlinkOpts{
+	//         Display: &display,
+	//         Tooltip: &tooltip,
+	//     }); err != nil {
+	//     fmt.Println(err)
+	// }
+
+	f.SetColWidth(sheet, "A", "A", 5)
+	f.SetColWidth(sheet, "B", "B", 20)
+	f.SetColWidth(sheet, "C", "C", 15)
+	f.SetColWidth(sheet, "D", "D", 13)
+
+	f.SetColWidth(sheet, "E", "E", float64(8*maxMarks))
+	f.SetColWidth(sheet, "F", "F", 22)
+	f.SetColWidth(sheet, "G", "L", 18)
+
+	headers := []string{
+		r.locale.MustLocalize("Name", lang),
+		r.locale.MustLocalize("Area", lang),
+		r.locale.MustLocalize("Date", lang),
+		r.locale.MustLocalize("Markings", lang),
+		r.locale.MustLocalize("Schedule", lang),
+		r.locale.MustLocalize("TotalHours", lang),
+		r.locale.MustLocalize("TotalHoursWorkedInSchedule", lang),
+		r.locale.MustLocalize("HoursWorked", lang),
+		r.locale.MustLocalize("ExcessHours", lang),
+		r.locale.MustLocalize("Delay", lang),
+		r.locale.MustLocalize("Delay2", lang),
+	}
+	// headers = append(headers, r.locale.MustLocalize("Markings", lang))
+	if err = f.SetCellStyle(sheet, "B6", "L6", titleStyle); err != nil {
+		log.Println(err)
+		return
+	}
+
+	cell, err = excelize.CoordinatesToCellName(2, 6)
+	if err != nil {
+		return
+	}
+	f.SetSheetRow(sheet, cell, &headers)
+
+	if err != nil {
+		return
+	}
+
+	startRow := 7
+
+	for idx, c := range items {
+
+		hrsTrabajadas := time.Second * time.Duration(c.HrsTrabajadas)
+		hrsTrabajadasEnHorario := time.Second * time.Duration(c.HrsTrabajadasEnHorario)
+		hrsExcedentes := time.Second * time.Duration(c.HrsExcedentes)
+		hrsDelay := time.Second * time.Duration(c.Retraso)
+		hrsDelay2 := time.Second * time.Duration(c.Retraso2)
+
+		totalHrsWorked += hrsTrabajadas
+		totalHrsWorkedInSchedule += hrsTrabajadasEnHorario
+		totalHrsExcedentes += hrsExcedentes
+		totalHrsDelay += hrsDelay
+		totalHrsDelay2 += hrsDelay2
+		fullName := fmt.Sprintf("%s %s", c.EmployeeFirstName, c.EmployeeLastName)
+		slice := []interface{}{fullName, c.AreaName, c.AsistenciaDate[0:10]}
+		slice = append(slice, c.Marcaciones)
+		slice = append(slice, c.Horario)
+		slice = append(slice, _r.Timespan(time.Second*time.Duration(c.HrsTotales)).Format())
+		slice = append(slice, _r.Timespan(hrsTrabajadasEnHorario).Format())
+		slice = append(slice, _r.Timespan(hrsTrabajadas).Format())
+		slice = append(slice, _r.Timespan(hrsExcedentes).Format())
+		slice = append(slice, _r.Timespan(hrsDelay).Format())
+		slice = append(slice, _r.Timespan(hrsDelay2).Format())
+
+		if err := f.SetCellStyle(sheet, fmt.Sprintf("B%d", (idx+startRow)), fmt.Sprintf("L%d", (idx+startRow)), cellStyle); err != nil {
+			log.Println(err)
+		}
+		cell, err := excelize.CoordinatesToCellName(2, idx+startRow)
+		if err != nil {
+			log.Println(err)
+		}
+		f.SetSheetRow(sheet, cell, &slice)
+	}
+
+	if err = r.reporteUtil.SetUpTotal(
+		sheet,
+		f,
+		7, (startRow + len(items) + 1), titleStyle2, cellStyle,
+		"G", "H", "L",
+		lang,
+		totalHrsWorkedInSchedule.String(),
+		totalHrsWorked.String(),
+		totalHrsExcedentes.String(),
+		totalHrsDelay.String(),
+		totalHrsDelay2.String(),
+	); err != nil {
+		return
+	}
+
+	return
+}
+
+func (r *reporteGenerator) CreateSheetEmployeArea(items []_r.Asistencia, sheet string, f *excelize.File, d _r.ReportInfo, lang string) (err error) {
+	var (
+		maxMarks        int
+		cellStyle       int
+		cellCenterStyle int
+		titleStyle      int
+		titleStyle2     int
+		cell            string
+
+		totalHrsWorked           time.Duration
+		totalHrsWorkedInSchedule time.Duration
+		totalHrsExcedentes       time.Duration
+		totalHrsDelay            time.Duration
+		totalHrsDelay2           time.Duration
+	)
+
+	for i := 0; i < len(items); i++ {
+		if items[i].CountMarcaciones > maxMarks {
+			maxMarks = items[i].CountMarcaciones
+		}
+	}
+
+	f.NewSheet(sheet)
+	r.reporteUtil.SetUpReporteLayout(sheet, f)
+	if titleStyle, err = r.reporteUtil.GetTitleStyle(f); err != nil {
+		return
+	}
+	if titleStyle2, err = r.reporteUtil.GetTitleStyle2(f); err != nil {
+		return
+	}
+	if cellStyle, err = r.reporteUtil.GetCommonCellStyle(f); err != nil {
+		return
+	}
+	if cellCenterStyle, err = r.reporteUtil.GetCellCenterStyle(f); err != nil {
+		return
+	}
+
+	//INFO
+	if err = r.reporteUtil.SetUpHeader(sheet, f, d, titleStyle, titleStyle2, cellCenterStyle, cellStyle, lang); err != nil {
+		return
+	}
+	if maxMarks == 0 || maxMarks == 1 {
+		maxMarks = 2
+	}
+
+	// 	display, tooltip := "https://github.com/xuri/excelize", "Excelize on GitHub"
+	// if err := f.SetCellHyperLink("Sheet1", "A3",
+	//     "https://github.com/xuri/excelize", "External", excelize.HyperlinkOpts{
+	//         Display: &display,
+	//         Tooltip: &tooltip,
+	//     }); err != nil {
+	//     fmt.Println(err)
+	// }
+
+	f.SetColWidth(sheet, "A", "A", 5)
+	f.SetColWidth(sheet, "B", "B", 20)
+	f.SetColWidth(sheet, "C", "C", 15)
+	f.SetColWidth(sheet, "D", "D", 13)
+
+	f.SetColWidth(sheet, "E", "E", float64(8*maxMarks))
+	f.SetColWidth(sheet, "F", "F", 22)
+	f.SetColWidth(sheet, "G", "L", 18)
+
+	headers := []string{
+		r.locale.MustLocalize("Name", lang),
+		r.locale.MustLocalize("Place", lang),
+		r.locale.MustLocalize("Date", lang),
+		r.locale.MustLocalize("Markings", lang),
+		r.locale.MustLocalize("Schedule", lang),
+		r.locale.MustLocalize("TotalHours", lang),
+		r.locale.MustLocalize("TotalHoursWorkedInSchedule", lang),
+		r.locale.MustLocalize("HoursWorked", lang),
+		r.locale.MustLocalize("ExcessHours", lang),
+		r.locale.MustLocalize("Delay", lang),
+		r.locale.MustLocalize("Delay2", lang),
+	}
+	// headers = append(headers, r.locale.MustLocalize("Markings", lang))
+	if err = f.SetCellStyle(sheet, "B6", "L6", titleStyle); err != nil {
+		log.Println(err)
+		return
+	}
+
+	cell, err = excelize.CoordinatesToCellName(2, 6)
+	if err != nil {
+		return
+	}
+	f.SetSheetRow(sheet, cell, &headers)
+
+	if err != nil {
+		return
+	}
+
+	startRow := 7
+
+	for idx, c := range items {
+
+		hrsTrabajadas := time.Second * time.Duration(c.HrsTrabajadas)
+		hrsTrabajadasEnHorario := time.Second * time.Duration(c.HrsTrabajadasEnHorario)
+		hrsExcedentes := time.Second * time.Duration(c.HrsExcedentes)
+		hrsDelay := time.Second * time.Duration(c.Retraso)
+		hrsDelay2 := time.Second * time.Duration(c.Retraso2)
+
+		totalHrsWorked += hrsTrabajadas
+		totalHrsWorkedInSchedule += hrsTrabajadasEnHorario
+		totalHrsExcedentes += hrsExcedentes
+		totalHrsDelay += hrsDelay
+		totalHrsDelay2 += hrsDelay2
+		fullName := fmt.Sprintf("%s %s", c.EmployeeFirstName, c.EmployeeLastName)
+		slice := []interface{}{fullName, c.SitioName, c.AsistenciaDate[0:10]}
+		slice = append(slice, c.Marcaciones)
+		slice = append(slice, c.Horario)
+		slice = append(slice, _r.Timespan(time.Second*time.Duration(c.HrsTotales)).Format())
+		slice = append(slice, _r.Timespan(hrsTrabajadasEnHorario).Format())
+		slice = append(slice, _r.Timespan(hrsTrabajadas).Format())
+		slice = append(slice, _r.Timespan(hrsExcedentes).Format())
+		slice = append(slice, _r.Timespan(hrsDelay).Format())
+		slice = append(slice, _r.Timespan(hrsDelay2).Format())
+
+		if err := f.SetCellStyle(sheet, fmt.Sprintf("B%d", (idx+startRow)), fmt.Sprintf("L%d", (idx+startRow)), cellStyle); err != nil {
+			log.Println(err)
+		}
+		cell, err := excelize.CoordinatesToCellName(2, idx+startRow)
+		if err != nil {
+			log.Println(err)
+		}
+		f.SetSheetRow(sheet, cell, &slice)
+	}
+
+	if err = r.reporteUtil.SetUpTotal(
+		sheet,
+		f,
+		7, (startRow + len(items) + 1), titleStyle2, cellStyle,
+		"G", "H", "L",
 		lang,
 		totalHrsWorkedInSchedule.String(),
 		totalHrsWorked.String(),

@@ -3,6 +3,7 @@ package http
 import (
 	_r "acs/domain/repository"
 	"bytes"
+	"log"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -22,6 +23,7 @@ func NewHandler(e *echo.Echo, reporteUcase _r.ReporteUseCase) {
 
 
 func (h *reporteHandler) GetReporte(c echo.Context) (err error) {
+	log.Println("GET REPORTE")
 	ctx := c.Request().Context()
 	var buffer bytes.Buffer
 	var data _r.ReporteRequest

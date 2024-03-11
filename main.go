@@ -1,52 +1,84 @@
 package main
 
 import (
-	"fmt"
-	_ "image/gif"
-	_ "image/jpeg"
-	_ "image/png"
-
-	"github.com/xuri/excelize/v2"
+	"log"
+	"math"
+	"sort"
+	// "github.com/aws/aws-sdk-go/service/bedrockagent"
 )
 
 func main() {
-	f := excelize.NewFile()
-	defer func() {
-		if err := f.Close(); err != nil {
-			fmt.Println(err)
-		}
-	}()
-
-	styleId, err := f.NewStyle(&excelize.Style{
-		Alignment: &excelize.Alignment{Vertical: "center", Horizontal: "center"},
-	})
-	sheet := "Sheet1"
-
-	// Insert a picture.
-	f.SetColWidth(sheet, "B", "B", 13)
-	f.SetColWidth(sheet, "C", "C", 25)
-	if err := f.SetRowHeight(sheet, 1, 36); err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	f.MergeCell(sheet, "B1", "C1")
-
-	if err = f.SetCellStyle(sheet, "B1", "C1", styleId); err != nil {
-		return
-	}
-
-	if err := f.AddPicture(sheet, "B1", "./app/media/logo.png", &excelize.GraphicOptions{
-		AutoFit: true,
-		OffsetY: 10,
-		ScaleX:  1,
-		ScaleY:  1,
-	}); err != nil {
-		fmt.Println(err)
-		return
-	}
-	// Insert a picture scaling in the cell with location hyperlink.
-	if err := f.SaveAs("./app/media/template.xlsx"); err != nil {
-		fmt.Println(err)
-	}
+	// strs := []string{"reflower","flow","flight"}
+	// res := longestCommonPrefix(strs)
+	nums := []int{-1, 2, 1, -4, 7}
+	res := threeSumClosest(nums, 1)
+	log.Println("RES", res)
 }
+
+func threeSumClosest(nums []int, target int) int {
+	sort.Ints(nums)
+	abs := func(n int) int {
+		if n < 0 {
+			return -n
+		}
+		return n
+	}
+	closestSum := math.MaxInt
+	for i := 0; i < len(nums); i++ {
+		left, right := i+1, len(nums)-1
+		for left < right {
+			sum := nums[i] + nums[left] + nums[right]
+			if abs(sum-target) < abs(closestSum-target) {
+				closestSum = sum
+			}
+
+			if sum < target {
+				left++
+			} else if sum > target {
+				right--
+			} else {
+				return closestSum
+			}
+
+		}
+	}
+	return closestSum
+}
+
+func longestCommonPrefix(strs []string) string {
+	p := strs[0]
+	for _, s := range strs {
+		i := 0
+		for ; i < len(s) && i < len(p) && p[i] == s[i]; i++ {
+		}
+		p = p[:i]
+		log.Println(p, i)
+	}
+	return p
+}
+
+// func lengthOfLongestSubstring(s string) int {
+// 	store := make(map[uint8]int)
+// 	var left, right, result int
+
+// 	for right < len(s) {
+// 		var r = s[right]
+// 		store[r] += 1
+// 		for store[r] > 1 {
+// 			l := s[left]
+// 			store[l] -= 1
+// 			left += 1
+// 		}
+// 		log.Println(result, (right-left+1))
+// 		result = max(result, right-left+1)
+// 		right += 1
+// 	}
+// 	return result
+// }
+
+// func max(a, b int) int {
+// 	if a > b {
+// 		return a
+// 	}
+// 	return b
+// }

@@ -81,6 +81,31 @@ func (u *asistenciaUseCase) CreateOrUpdateAsistencia(ctx context.Context, d _r.A
 	return
 }
 
+func (u *asistenciaUseCase) RevocerAsistenciaAllUsers(ctx context.Context, fecha string) (err error) {
+	customTimeoutContext := time.Duration(2) * time.Minute
+	ctx, cancel := context.WithTimeout(ctx, customTimeoutContext)
+	defer cancel()
+	res, err := u.repo.GetAllCardHolders(ctx)
+	if err != nil {
+		u.logger.LogError("RecoverAsistenciaAllUsers.GetAllCardHolders", "asistencia_usecase.go", err)
+		return
+	}
+	for _, cardHolder := range res {
+		m := _r.TMarcacionAsistencia{
+			CardHolderGuid: cardHolder.Guid,
+			Fecha:          fecha,
+			IdArea:         cardHolder.IdArea,
+			IdSitio:        cardHolder.IdSitio,
+		}
+		err := u.UpdateAsistenciaFromIncomingData(ctx, m)
+		if err != nil {
+			u.logger.LogError("RecoverAsistenciaAllUsers.GetAllCardHolders", "asistencia_usecase.go", err)
+		}
+	}
+
+	return
+}
+
 func (u *asistenciaUseCase) UpdateAsistenciaFromIncomingData(ctx context.Context, d _r.TMarcacionAsistencia) (err error) {
 	ctx, cancel := context.WithTimeout(ctx, u.timeout)
 	defer cancel()
@@ -89,6 +114,10 @@ func (u *asistenciaUseCase) UpdateAsistenciaFromIncomingData(ctx context.Context
 	if err != nil {
 		u.logger.LogError("UpdateAsistenciaFromIncomingData_GetEmployeData", "asistencia_usecase.go", err)
 	}
+	if res.TimesString == "" {
+		return
+	}
+	log.Println("TIMES ----------",res.TimesString)
 	// Declare variables for horario
 	horarioByDay := make(map[int][]_r.Horario)
 	var (
@@ -134,7 +163,7 @@ func (u *asistenciaUseCase) UpdateAsistenciaFromIncomingData(ctx context.Context
 		}
 	}
 	// Convert string date to time
-	log.Println("DATE",res.Date)
+	log.Println("DATE", res.Date)
 	currentT, err := getDateTime(res.Date, "2006-01-02T15:04:05Z")
 	if err != nil {
 		log.Println("fail to parse", err)
@@ -142,7 +171,7 @@ func (u *asistenciaUseCase) UpdateAsistenciaFromIncomingData(ctx context.Context
 	// Get Horario dando el dia de la fecha
 	res.Horario = horarioByDay[int(currentT.Weekday())]
 
-	log.Println("CURRENT DAY", currentT, currentT.Day(),int(currentT.Weekday()))
+	log.Println("CURRENT DAY", currentT, currentT.Day(), int(currentT.Weekday()))
 	times := res.Times
 	types := res.Types
 
@@ -166,7 +195,6 @@ func (u *asistenciaUseCase) UpdateAsistenciaFromIncomingData(ctx context.Context
 				}
 
 				th, thw, retraso, lastRetrasoR := checkWorkedHours(res.Horario, start, end, currentT, lastTime, lastRetrasoR)
-				
 
 				log.Println(lastRetrasoR)
 				lastTime = end
@@ -235,7 +263,6 @@ func (u *asistenciaUseCase) UpdateAsistenciaFromIncomingData(ctx context.Context
 		HrsExcedentes:          hrsExcedente.Seconds(),
 		Horario:                horarioString,
 		Marcaciones:            marcaciones,
-		CountTurnos:            maxTurnos,
 		CountMarcaciones:       maxMarks,
 	}
 	asistencia.IdSitio = d.IdSitio
@@ -316,12 +343,11 @@ func checkWorkedHours(horario []_r.Horario, mStart time.Time, mEnd time.Time, cu
 				}
 			}
 
-
 			// Add retraso2
 			v, e := lastRetraso[i]
 			if e {
 				if (retraso2 < v && retraso2 > 0) || mEnd.Before(EndTime) {
-					retraso2 -=  (time.Minute * time.Duration(1))
+					retraso2 -= (time.Minute * time.Duration(1))
 					lastRetraso[i] = retraso2 + (time.Second * time.Duration(60-mEnd.Second()))
 				}
 			} else {
@@ -334,11 +360,11 @@ func checkWorkedHours(horario []_r.Horario, mStart time.Time, mEnd time.Time, cu
 
 			// Solo sumar segundos de la marcacion de entrada al retraso si el retraso es mayor a 0
 			if retraso > 0 || mStart.After(StartTime) {
-				log.Println("Adding sconds",count)
+				log.Println("Adding sconds", count)
 				retraso += time.Second * time.Duration(mStart.Second())
 			}
 
-			if mStart.After(StartTime){
+			if mStart.After(StartTime) {
 				totalWorked -= time.Second * time.Duration(mStart.Second())
 			}
 
@@ -365,7 +391,6 @@ func getDateTime(str string, layout string) (t time.Time, err error) {
 	}
 	return
 }
-
 
 func getType(marcacionType string) (res string) {
 	switch marcacionType {

@@ -3,6 +3,7 @@ package util
 import (
 	_r "acs/domain/repository"
 	"fmt"
+
 	// "time"
 
 	// "log"
@@ -29,26 +30,7 @@ func (r *reporteUtil) SetUpReporteLayout(sheet string, f *excelize.File) (err er
 	if styleId, err = r.GetBlankStyle(f); err != nil {
 		return
 	}
-
-	f.SetColStyle(sheet, "A", styleId)
-	f.SetColStyle(sheet, "B", styleId)
-	f.SetColStyle(sheet, "C", styleId)
-	f.SetColStyle(sheet, "D", styleId)
-	f.SetColStyle(sheet, "E", styleId)
-	f.SetColStyle(sheet, "F", styleId)
-	f.SetColStyle(sheet, "G", styleId)
-	f.SetColStyle(sheet, "H", styleId)
-	f.SetColStyle(sheet, "I", styleId)
-	f.SetColStyle(sheet, "J", styleId)
-	f.SetColStyle(sheet, "K", styleId)
-	f.SetColStyle(sheet, "L", styleId)
-	f.SetColStyle(sheet, "M", styleId)
-	f.SetColStyle(sheet, "N", styleId)
-	f.SetColStyle(sheet, "O", styleId)
-	f.SetColStyle(sheet, "P", styleId)
-	f.SetColStyle(sheet, "Q", styleId)
-
-
+	f.SetColStyle(sheet, "A:R", styleId)
 	return
 }
 
@@ -109,18 +91,22 @@ func (r *reporteUtil) GetCellCenterStyle(f *excelize.File) (styleId int, err err
 }
 
 func (r *reporteUtil) SetUpHeader(sheet string, f *excelize.File, d _r.ReportInfo, titleStyle, titleStyle2, cellCenterStyle, cellStyle int, lang string) (err error) {
+	var cell string
 
-	cell, err := excelize.CoordinatesToCellName(2, 2)
-	if err != nil {
-		return
+	if d.ReporteType == _r.REPORTE_EMPLOYEE || d.ReporteFormat == _r.EMPLOYEE_FORMAT {
+		cell, err1 := excelize.CoordinatesToCellName(2, 2)
+		if err1 != nil {
+			err = err1
+			return
+		}
+		if err = f.SetCellStyle(sheet, "B2", "B2", titleStyle); err != nil {
+			return
+		}
+		if err = f.SetCellStyle(sheet, "C2", "C2", cellStyle); err != nil {
+			return
+		}
+		f.SetSheetRow(sheet, cell, &[]string{r.Locale.MustLocalize("Name", lang), d.EmployeName})
 	}
-	if err = f.SetCellStyle(sheet, "B2", "B2", titleStyle); err != nil {
-		return
-	}
-	if err = f.SetCellStyle(sheet, "C2", "C2", cellStyle); err != nil {
-		return
-	}
-	f.SetSheetRow(sheet, cell, &[]string{r.Locale.MustLocalize("Name", lang), d.EmployeName})
 
 	cell, err = excelize.CoordinatesToCellName(2, 3)
 	if err != nil {
@@ -132,7 +118,7 @@ func (r *reporteUtil) SetUpHeader(sheet string, f *excelize.File, d _r.ReportInf
 	if err = f.SetCellStyle(sheet, "C3", "C3", cellStyle); err != nil {
 		return
 	}
-	f.SetSheetRow(sheet, cell, &[]string{r.Locale.MustLocalize("Area", lang), d.GerenciaName})
+	f.SetSheetRow(sheet, cell, &[]string{r.Locale.MustLocalize("Area", lang), d.AreaName})
 
 	cell, err = excelize.CoordinatesToCellName(2, 4)
 	if err != nil {

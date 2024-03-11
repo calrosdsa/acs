@@ -1,0 +1,16 @@
+time="2024-03-11T10:45:15-05:00" level=error msg="<nil>" file=reporte_ucase method=GetReporteSitio.GetAsistenciaEmployeArea
+time="2024-03-11T11:09:08-05:00" level=error msg="<nil>" file=reporte_ucase method=GetReporteSitio.GetAsistenciaEmployeArea
+time="2024-03-11T11:10:24-05:00" level=error msg="<nil>" file=reporte_ucase method=GetReporteSitio.GetAsistenciaEmployeArea
+time="2024-03-11T11:31:06-05:00" level=error msg="<nil>" file=reporte_ucase method=GetReporteSitio.GetAsistenciaEmployeArea
+time="2024-03-11T13:56:55-05:00" level=error msg="<nil>" file=reporte_ucase method=GetReporteSitio.GetAsistenciaEmployeArea
+time="2024-03-11T14:21:43-05:00" level=error msg="<nil>" file=reporte_ucase method=GetRepoteEmploye.getCardHolder
+time="2024-03-11T14:41:59-05:00" level=error msg="<nil>" file=reporte_ucase method=GetReporteSitio.GetAsistenciaEmployeArea
+time="2024-03-11T15:29:06-05:00" level=error msg="<nil>" file=reporte_ucase method=GetReporteSitio.GetEmployeesArea
+time="2024-03-11T16:54:18-05:00" level=error msg="<nil>" file=asistencia_usecase.go method=RecoverAsistenciaAllUsers.GetAllCardHolders
+time="2024-03-11T16:54:49-05:00" level=error msg="<nil>" file=asistencia_usecase.go method=RecoverAsistenciaAllUsers.GetAllCardHolders
+time="2024-03-11T16:55:37-05:00" level=error msg="<nil>" file=asistencia_usecase.go method=RecoverAsistenciaAllUsers.GetAllCardHolders
+time="2024-03-11T16:55:37-05:00" level=error msg="<nil>" file=asistencia_usecase.go method=RecoverAsistenciaAllUsers.GetAllCardHolders
+time="2024-03-11T16:57:29-05:00" level=error msg="<nil>" file=asistencia_usecase.go method=RecoverAsistenciaAllUsers.GetAllCardHolders
+time="2024-03-11T17:00:59-05:00" level=error msg="<nil>" file=asistencia_usecase.go method=RecoverAsistenciaAllUsers.GetAllCardHolders
+time="2024-03-11T17:01:21-05:00" level=error msg="<nil>" file=asistencia_usecase.go method=RecoverAsistenciaAllUsers.GetAllCardHolders
+time="2024-03-11T17:03:50-05:00" level=error msg="<nil>" file=asistencia_usecase.go method=RecoverAsistenciaAllUsers.GetAllCardHolders

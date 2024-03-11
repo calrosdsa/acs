@@ -59,11 +59,18 @@ type MarcacionData struct {
 
 type ReporteRepo interface {
 	// GetReporteEmpleado(ctx context.Context) (res []Data, horario []Horario, err error)
-	GetReportEmploye(ctx context.Context, d ReporteRequest) (res []Asistencia, err error)
+	GetAsistenciaEmployeeSitio(ctx context.Context, d ReporteRequest) (res []Asistencia, err error)
+	GetAsistenciaEmployeeArea(ctx context.Context, d ReporteRequest) (res []Asistencia, err error)
+	// GetAsistenciaEmployeSitio(ctx context.Context, d ReporteRequest) (res []Asistencia, err error)
+	GetAsistenciaEmployee(ctx context.Context, d ReporteRequest) (res []Asistencia, err error)
 	GetMarcacionesForReport(ctx context.Context, d ReporteRequest) (res []MarcacionItem, err error)
 	GetEmpleadoCardHolder(ctx context.Context, guid string) (res Employee, err error)
 
-	GetEmployeesSitio(ctx context.Context,idSitio int)(res []Employee,err error)
+	GetEmployeesSitio(ctx context.Context, idSitio int) (res []Employee, err error)
+	GetEmployeesArea(ctx context.Context, idArea int,all bool, idSitio int) (res []Employee, err error)
+
+	GetArea(ctx context.Context, idArea int) (res Area, err error)
+	GetSitio(ctx context.Context, idSitio int) (res Sitio, err error)
 
 	// GetReporteEmpleado(ctx context.Context) (res []Data, horario []Horario, err error)
 }
@@ -82,11 +89,13 @@ type ReporteUseCase interface {
 }
 
 type ReportInfo struct {
-	EmployeName  string `json:"employeName"`
-	GerenciaName string `json:"gerenciaName"`
-	SitioName    string `json:"sitioName"`
-	From         string `json:"from"`
-	To           string `json:"to"`
+	EmployeName   string        `json:"employeName"`
+	AreaName      string        `json:"areaName"`
+	SitioName     string        `json:"sitioName"`
+	From          string        `json:"from"`
+	To            string        `json:"to"`
+	ReporteType   ReporteType   `json:"reporteType"`
+	ReporteFormat ReporteFormat `json:"reporteFormat"`
 }
 
 type ReporteRequest struct {
@@ -96,8 +105,11 @@ type ReporteRequest struct {
 	EndDate       string        `json:"endDate"`
 	ReporteType   ReporteType   `json:"reporteType"`
 	ReporteFormat ReporteFormat `json:"reporteFormat"`
-	IdSitio       int           `json:"idSitio"`
-	IdArea        int           `json:"idArea"`
+	// IdsSitio []int `json:"ids"`
+	IdSitio   int  `json:"idSitio"`
+	IdArea    int  `json:"idArea"`
+	// AllAreas  bool `json:"todasLasAreas"`
+	ALLSitios bool `json:"todosLosSitios"`
 }
 
 type ReporteType byte

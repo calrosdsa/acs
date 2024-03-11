@@ -16,6 +16,13 @@ func NewRepository(conn *sql.DB) _r.AsistenciaRepository {
 		Conn: conn,
 	}
 }
+
+func (m *asistenciaRepository) GetAllCardHolders(ctx context.Context) (res []_r.CardHolderUser, err error) {
+	query := `select c.guid,c.idArea,c.idSitio from  TCardHolder as c`
+	res,err = m.fetchCardHolders(ctx,query)
+	return 
+}
+
 func (m *asistenciaRepository) GetAsistencia(ctx context.Context, chguid string, fecha string) (res _r.Asistencia, err error) {
 	return
 }
@@ -37,22 +44,21 @@ func (m *asistenciaRepository) GetAsistenciasUser(ctx context.Context, chGuid st
 func (m *asistenciaRepository) CreateAsistencia(ctx context.Context, d _r.Asistencia) (err error) {
 	log.Println(d)
 	query := `insert into TAsistencia(asistenciaDate,cardholderGuid,retraso,retraso2,hrsTotales,hrsTrabajadas,hrsTrabajadasEnHorario,
-		marcaciones,horario,countMarcaciones,countTurnos,idSitio,idArea,doorGuid)
-		values(@p1,@p2,@p3,@p4,@p5,@p6,@p7,@p8,@p9,@p10,@p11,@p12,@p13,@p14)`
+		marcaciones,horario,countMarcaciones,idSitio,idArea,doorGuid)
+		values(@p1,@p2,@p3,@p4,@p5,@p6,@p7,@p8,@p9,@p10,@p11,@p12,@p13)`
 	// marcaciones,horario) values(@p1,@p2,@p3,@p4,@p5,@p6,@p7,@p8)`
 
-	_, err = m.Conn.ExecContext(ctx, query, d.AsistenciaDate, d.CardHolderGuid, d.Retraso,d.Retraso2, d.HrsTotales, d.HrsTrabajadas,
-		d.HrsTrabajadasEnHorario, d.Marcaciones, d.Horario, d.CountMarcaciones, d.CountTurnos,d.IdSitio,d.IdArea,d.DoorGuid)
+	_, err = m.Conn.ExecContext(ctx, query, d.AsistenciaDate, d.CardHolderGuid, d.Retraso, d.Retraso2, d.HrsTotales, d.HrsTrabajadas,
+		d.HrsTrabajadasEnHorario, d.Marcaciones, d.Horario, d.CountMarcaciones, d.IdSitio, d.IdArea, d.DoorGuid)
 	return
 }
 
 func (m *asistenciaRepository) UpdateAsistencia(ctx context.Context, d _r.Asistencia) (err error) {
 	query := `update TAsistencia set retraso = @p1, hrsTotales = @p2, hrsTrabajadas = @p3, hrsTrabajadasEnHorario = @p4,
-	marcaciones = @p5,countMarcaciones = @p8,countTurnos = @p9, retraso2 = @p10, hrsExcedentes = @p11
+	marcaciones = @p5,countMarcaciones = @p8, retraso2 = @p9, hrsExcedentes = @p10
 	where asistenciaDate = @p6 and cardholderGuid = @p7`
 	_, err = m.Conn.ExecContext(ctx, query, d.Retraso, d.HrsTotales, d.HrsTrabajadas,
-		d.HrsTrabajadasEnHorario, d.Marcaciones, d.AsistenciaDate, d.CardHolderGuid, d.CountMarcaciones,
-		d.CountTurnos,d.Retraso2,d.HrsExcedentes)
+		d.HrsTrabajadasEnHorario, d.Marcaciones, d.AsistenciaDate, d.CardHolderGuid, d.CountMarcaciones, d.Retraso2, d.HrsExcedentes)
 	return
 }
 
@@ -200,6 +206,30 @@ func (p *asistenciaRepository) fetchHorario(ctx context.Context, query string, a
 			&t.StartTime,
 			&t.EndTime,
 			&t.Day,
+		)
+		res = append(res, t)
+	}
+	return res, nil
+}
+
+func (p *asistenciaRepository) fetchCardHolders(ctx context.Context, query string, args ...interface{}) (res []_r.CardHolderUser, err error) {
+	rows, err := p.Conn.QueryContext(ctx, query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		errRow := rows.Close()
+		if errRow != nil {
+			log.Println(errRow)
+		}
+	}()
+	res = make([]_r.CardHolderUser, 0)
+	for rows.Next() {
+		t := _r.CardHolderUser{}
+		err = rows.Scan(
+			&t.Guid,
+			&t.IdArea,
+			&t.IdSitio,
 		)
 		res = append(res, t)
 	}
