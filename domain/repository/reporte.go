@@ -7,7 +7,7 @@ import (
 )
 
 type Data struct {
-	Date string `json:"date"`
+	Date time.Time `json:"date"`
 	// Json string `json:"dataJson"`
 	// MarcacionData MarcacionData `json:"marcacion_data"`
 	Times []string `json:"times"`

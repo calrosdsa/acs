@@ -28,7 +28,7 @@ func (m *repoReporte) GetAsistenciaEmployeeArea(ctx context.Context, d _r.Report
 		filterString string
 	)
 	if !d.ALLSitios {
-		filterString = fmt.Sprintf("and a.idSitio = %d",d.IdSitio)
+		filterString = fmt.Sprintf("and a.idSitio = %d", d.IdSitio)
 	}
 	// idsSitioStr := _q.ArrayToString(d.IdsSitio, ",")
 	// log.Println(d.IdArea, "-------", d.IdSitio,idsSitioStr)
@@ -38,7 +38,9 @@ func (m *repoReporte) GetAsistenciaEmployeeArea(ctx context.Context, d _r.Report
 	left join TCardHolder as c on c.guid = a.cardholderGuid
 	left join TSitio as sitio on sitio.id = a.idSitio
 	where a.idArea = @p1 %s and a.asistenciaDate >= @p2 AND
-	a.asistenciaDate <= @p3`,filterString)
+	a.asistenciaDate <= @p3
+	order by a.asistenciaDate asc
+	 `, filterString)
 	res, err = m.fetchAsistenciasUser(ctx, query, d.IdArea, d.StartDate, d.EndDate)
 	if err != nil {
 		return
@@ -55,7 +57,9 @@ func (m *repoReporte) GetAsistenciaEmployeeSitio(ctx context.Context, d _r.Repor
 	left join TCardHolder as c on c.guid = cardholderGuid
 	left join TArea as area on area.id = a.idArea
 	where a.idSitio = @p1 and asistenciaDate >= @p2 AND
-	asistenciaDate <= @p3`
+	asistenciaDate <= @p3
+	order by a.asistenciaDate asc
+	`
 	res, err = m.fetchAsistenciasUser(ctx, query, d.IdSitio, d.StartDate, d.EndDate)
 	if err != nil {
 		return
@@ -64,11 +68,13 @@ func (m *repoReporte) GetAsistenciaEmployeeSitio(ctx context.Context, d _r.Repor
 }
 func (m *repoReporte) GetAsistenciaEmployee(ctx context.Context, d _r.ReporteRequest) (res []_r.Asistencia, err error) {
 	var query string
-	query = `select a.id,asistenciaDate,marcaciones,horario,hrsTotales,hrsTrabajadas,hrsTrabajadasEnHorario,hrsExcedentes,
+	query = `select a.id,a.asistenciaDate,marcaciones,horario,hrsTotales,hrsTrabajadas,hrsTrabajadasEnHorario,hrsExcedentes,
 	retraso, retraso2  ,countMarcaciones,(''),(''),(''),('')
 	from TAsistencia as a
 	where cardholderGuid = @p1 and asistenciaDate >= @p2 AND
-	asistenciaDate <= @p3`
+	asistenciaDate <= @p3
+	order by a.asistenciaDate asc
+	`
 	res, err = m.fetchAsistenciasUser(ctx, query, d.CHGuid, d.StartDate, d.EndDate)
 	if err != nil {
 		return
@@ -104,31 +110,31 @@ func (m *repoReporte) GetEmployeesSitio(ctx context.Context, idSitio int) (res [
 	return
 }
 
-func (m *repoReporte) GetEmployeesArea(ctx context.Context, idArea int,all bool, idSitio int) (res []_r.Employee, err error) {
+func (m *repoReporte) GetEmployeesArea(ctx context.Context, idArea int, all bool, idSitio int) (res []_r.Employee, err error) {
 	// idsStr := _q.ArrayToString(idsSitio, ",")
 	var (
 		filterString string
 	)
 	if !all {
-		filterString = fmt.Sprintf("and c.idSitio = %d",idSitio)
+		filterString = fmt.Sprintf("and c.idSitio = %d", idSitio)
 	}
-	query :=fmt.Sprintf(`select c.guid,coalesce(c.firtsName,''), coalesce(c.lastName,''),
+	query := fmt.Sprintf(`select c.guid,coalesce(c.firtsName,''), coalesce(c.lastName,''),
 	(''),coalesce(s.nombre,'')
 	from TCardHolder as c
 	left join TSitio as s on s.id = c.idSitio
-	where c.idArea = @p1 %s`,filterString)
+	where c.idArea = @p1 %s`, filterString)
 	res, err = m.fetchEmployees(ctx, query, idArea)
 	return
 }
-func(m *repoReporte) GetSitio(ctx context.Context,idSitio int)(res _r.Sitio,err error){
+func (m *repoReporte) GetSitio(ctx context.Context, idSitio int) (res _r.Sitio, err error) {
 	query := "select id,nombre from TSitio where id = @p1"
-	err = m.Conn.QueryRowContext(ctx,query,idSitio).Scan(&res.Id,&res.Name)
+	err = m.Conn.QueryRowContext(ctx, query, idSitio).Scan(&res.Id, &res.Name)
 	return
 }
 
-func(m *repoReporte) GetArea(ctx context.Context,idArea int)(res _r.Area,err error){
+func (m *repoReporte) GetArea(ctx context.Context, idArea int) (res _r.Area, err error) {
 	query := "select id,nombre from TArea where id = @p1"
-	err = m.Conn.QueryRowContext(ctx,query,idArea).Scan(&res.Id,&res.Name)
+	err = m.Conn.QueryRowContext(ctx, query, idArea).Scan(&res.Id, &res.Name)
 	return
 }
 

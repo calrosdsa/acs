@@ -26,24 +26,6 @@ func NewUseCase(timeout time.Duration, repo _r.AsistenciaRepository, logger _r.L
 	}
 }
 
-func (u *asistenciaUseCase) GetAsistenciasUser(ctx context.Context, chGuid string, page, size int) (res []_r.Asistencia,
-	nextPage int, count int, err error) {
-	ctx, cancel := context.WithTimeout(ctx, u.timeout)
-	defer cancel()
-	page = u.util.PaginationValues(page)
-	res, count, err = u.repo.GetAsistenciasUser(ctx, chGuid, page, size)
-	if err != nil {
-		u.logger.LogError("GetAsistenciasUser", "asistencia_usecase", err)
-		return
-	}
-	nextPage = u.util.GetNextPage(len(res), size, page+1)
-	return
-}
-
-func (u *asistenciaUseCase) GetAsistencia(ctx context.Context, chGuid string, fecha string) (res _r.Asistencia, err error) {
-	return
-}
-
 func (u *asistenciaUseCase) InsertMarcacion(ctx context.Context, d _r.TMarcacionAsistencia) (err error) {
 	ctx, cancel := context.WithTimeout(ctx, u.timeout)
 	defer cancel()
@@ -105,20 +87,38 @@ func (u *asistenciaUseCase) RevocerAsistenciaAllUsers(ctx context.Context, fecha
 
 	return
 }
-
 func (u *asistenciaUseCase) UpdateAsistenciaFromIncomingData(ctx context.Context, d _r.TMarcacionAsistencia) (err error) {
 	ctx, cancel := context.WithTimeout(ctx, u.timeout)
 	defer cancel()
-	// Get data from db
-	res, horario, err := u.repo.GetEmployeData(ctx, d.CardHolderGuid, d.Fecha)
-	if err != nil {
-		u.logger.LogError("UpdateAsistenciaFromIncomingData_GetEmployeData", "asistencia_usecase.go", err)
+	var (
+		horario []_r.Horario
+		res     _r.Data
+	)
+	if d.IsHorarioNocturno {
+		// Get data from db
+		if d.TypeMarcacion == _r.MarcacionSalidaInt{
+			res, horario, err = u.repo.GetEmployeDataHorarioNocturno(ctx, d.CardHolderGuid, d.Fecha, d.IdPerfil)
+			if err != nil {
+				u.logger.LogError("UpdateAsistenciaFromIncomingData_GetEmployeDataHorarioNocturno", "asistencia_usecase.go", err)
+			}
+		}
+	} else {
+		res, horario, err = u.repo.GetEmployeData(ctx, d.CardHolderGuid, d.Fecha, d.IdPerfil)
+		if err != nil {
+			u.logger.LogError("UpdateAsistenciaFromIncomingData_GetEmployeData", "asistencia_usecase.go", err)
+		}
+		if res.TimesString == "" {
+			return
+		}
 	}
-	if res.TimesString == "" {
-		return
-	}
-	log.Println("TIMES ----------",res.TimesString)
+
+
 	// Declare variables for horario
+	u.GetAsistenciaData(res, horario, d)
+	return
+}
+
+func (u *asistenciaUseCase) GetAsistenciaData(res _r.Data, horario []_r.Horario, d _r.TMarcacionAsistencia) (asistencia _r.Asistencia, err error) {
 	horarioByDay := make(map[int][]_r.Horario)
 	var (
 		maxMarks  int
@@ -150,8 +150,13 @@ func (u *asistenciaUseCase) UpdateAsistenciaFromIncomingData(ctx context.Context
 		}
 	}
 	// Convertir string to slice y adjuntar a  lista de marcaciones hora  y marcaciones tipo
-	res.Times = append(res.Times, strings.Split(res.TimesString, ",")...)
-	res.Types = append(res.Types, strings.Split(res.TypesString, ",")...)
+	if res.TimesString != "" {
+		res.Times = append(res.Times, strings.Split(res.TimesString, ",")...)
+	}
+
+	if res.TypesString != "" {
+		res.Types = append(res.Types, strings.Split(res.TypesString, ",")...)
+	}
 
 	// Validar que la marcacion del dia siguiente no sea nula
 	if res.LastM != nil && res.LastT != nil {
@@ -163,15 +168,18 @@ func (u *asistenciaUseCase) UpdateAsistenciaFromIncomingData(ctx context.Context
 		}
 	}
 	// Convert string date to time
-	log.Println("DATE", res.Date)
-	currentT, err := getDateTime(res.Date, "2006-01-02T15:04:05Z")
-	if err != nil {
-		log.Println("fail to parse", err)
-	}
-	// Get Horario dando el dia de la fecha
-	res.Horario = horarioByDay[int(currentT.Weekday())]
+	log.Println("MARCACIONES FECHA", res.Times)
+	log.Println("MARCACIONES Types", res.Types)
 
-	log.Println("CURRENT DAY", currentT, currentT.Day(), int(currentT.Weekday()))
+	log.Println("DATE", res.Date)
+	// currentT, err := getDateTime(res.Date, "2006-01-02T15:04:05Z")
+	// if err != nil {
+	// 	log.Println("fail to parse", err)
+	// }
+	// log.Println("CURRENT TIME",currentT)
+	// Get Horario dando el dia de la fecha
+	res.Horario = horarioByDay[int(res.Date.Weekday())]
+
 	times := res.Times
 	types := res.Types
 
@@ -184,19 +192,20 @@ func (u *asistenciaUseCase) UpdateAsistenciaFromIncomingData(ctx context.Context
 				if err != nil {
 					log.Println("Fail parse", err)
 				}
+
 				end, err := getDateTime(times[j+1], "2006-01-02 15:04:05")
 				if err != nil {
 					log.Println("Fail parse", err)
 				}
 				diff := end.Sub(start)
+				log.Println("DIFFERENCE",diff)
 				res.HorasTrabajadas = append(res.HorasTrabajadas, diff)
 				if len(res.HorasTrabajadas) > maxTurnos {
 					maxTurnos = len(res.Horario)
 				}
 
-				th, thw, retraso, lastRetrasoR := checkWorkedHours(res.Horario, start, end, currentT, lastTime, lastRetrasoR)
+				th, thw, retraso, _ := checkWorkedHours(res.Horario, start, end, lastTime, lastRetrasoR)
 
-				log.Println(lastRetrasoR)
 				lastTime = end
 				res.Retraso += retraso
 				res.HorasAsignadas = th
@@ -252,7 +261,7 @@ func (u *asistenciaUseCase) UpdateAsistenciaFromIncomingData(ctx context.Context
 		hrsExcedente = hrsTrabajadas - res.HorasAsignadas
 	}
 
-	asistencia := _r.Asistencia{
+	asistencia = _r.Asistencia{
 		CardHolderGuid:         d.CardHolderGuid,
 		AsistenciaDate:         res.Date,
 		Retraso:                res.Retraso.Seconds(),
@@ -268,15 +277,19 @@ func (u *asistenciaUseCase) UpdateAsistenciaFromIncomingData(ctx context.Context
 	asistencia.IdSitio = d.IdSitio
 	asistencia.IdArea = d.IdArea
 	asistencia.DoorGuid = d.DoorGuid
+	if d.IsHorarioNocturno && d.TypeMarcacion == _r.MarcacionSalidaInt {
+		then := res.Date.AddDate(0,0,-1)
+		log.Println(then,"DATE MINUS 1 DAY")
+		asistencia.AsistenciaDate = then
+	}
 	u.CreateOrUpdateAsistencia(context.Background(), asistencia)
 	return
 }
 
-func checkWorkedHours(horario []_r.Horario, mStart time.Time, mEnd time.Time, currentT time.Time,
+func checkWorkedHours(horario []_r.Horario, mStart time.Time, mEnd time.Time,
 	lastPrevTime time.Time, lastRetraso map[int]time.Duration) (
 	total time.Duration, totalWorked time.Duration, retraso time.Duration, lastRetrasoR map[int]time.Duration) {
 	for i := 0; i < len(horario); i++ {
-
 		var (
 			count int
 			// Declarar variable para contar los minutos empezando desde el inicio del horario
@@ -295,11 +308,11 @@ func checkWorkedHours(horario []_r.Horario, mStart time.Time, mEnd time.Time, cu
 		total += diff
 
 		//StartTime del turno
-		StartTime := time.Date(currentT.Year(), currentT.Month(), currentT.Day(), horario[i].StartTime.Hour(), horario[i].StartTime.Minute(), 00, 100, time.UTC)
+		StartTime := time.Date(mStart.Year(), mStart.Month(), mStart.Day(), horario[i].StartTime.Hour(), horario[i].StartTime.Minute(), 00, 100, time.UTC)
 
 		log.Println("Continue", i)
 		//EndTime del turno
-		EndTime := time.Date(currentT.Year(), currentT.Month(), currentT.Day(), horario[i].EndTime.Hour(), horario[i].EndTime.Minute(), 00, 100, time.UTC)
+		EndTime := time.Date(mEnd.Year(), mEnd.Month(), mEnd.Day(), horario[i].EndTime.Hour(), horario[i].EndTime.Minute(), 00, 100, time.UTC)
 
 		//Example
 		// StartTime = 08:00  EndTime = 12:00

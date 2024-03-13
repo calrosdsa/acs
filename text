@@ -1,65 +1,164 @@
-				// if len(times) >= (j+3) && types[j+2] == MarcacionSalida {
+//ADD COLUMNA EN EL REPORTE EXCEL HORAS TRABAJADAS FUERA DEL HORARIO 
 
-				// 	if len(times) >= (j+4) && types[j+3] == MarcacionSalida {
+//CODE BEFORE CHANGES
 
-				// 		start, err := getDateTime(times[j], "2006-01-02 15:04:05")
-				// 		if err != nil {
-				// 			log.Println("Fail parse", err)
-				// 		}
-				// 		end, err := getDateTime(times[j+3], "2006-01-02 15:04:05")
-				// 		if err != nil {
-				// 			log.Println("Fail parse", err)
-				// 		}
-				// 		diff := end.Sub(start)
-				// 		res.HorasTrabajadas = append(res.HorasTrabajadas, diff)
-				// 		if len(res.HorasTrabajadas) > maxTurnos {
-				// 			maxTurnos = len(res.Horario)
-				// 		}
-				// 		th, thw, retraso := checkWorkedHours(res.Horario, start, end, currentT)
-				// 		res.Retraso += retraso
-				// 		res.Total = th
-				// 		res.TotalHrsWorked += thw
-				// 		j += 3
+// func (u *asistenciaUseCase) GetAsistenciaData(res _r.Data, horario []_r.Horario, d _r.TMarcacionAsistencia) (asistencia _r.Asistencia, err error) {
+// 	horarioByDay := make(map[int][]_r.Horario)
+// 	var (
+// 		maxMarks  int
+// 		maxTurnos int
 
-				// 	} else {
-				// 		start, err := getDateTime(times[j], "2006-01-02 15:04:05")
-				// 		if err != nil {
-				// 			log.Println("Fail parse", err)
-				// 		}
-				// 		end, err := getDateTime(times[j+2], "2006-01-02 15:04:05")
-				// 		if err != nil {
-				// 			log.Println("Fail parse", err)
-				// 		}
-				// 		diff := end.Sub(start)
-				// 		res.HorasTrabajadas = append(res.HorasTrabajadas, diff)
-				// 		if len(res.HorasTrabajadas) > maxTurnos {
-				// 			maxTurnos = len(res.Horario)
-				// 		}
-				// 		th, thw, retraso := checkWorkedHours(res.Horario, start, end, currentT)
-				// 		res.Retraso += retraso
-				// 		res.Total = th
-				// 		res.TotalHrsWorked += thw
-				// 		j += 2
-				// 	}
+// 		lastTime     time.Time
+// 		hrsExcedente time.Duration
+// 	)
+// 	lastRetrasoR := make(map[int]time.Duration)
 
-				// } else {
-				// 	start, err := getDateTime(times[j], "2006-01-02 15:04:05")
-				// 	if err != nil {
-				// 		log.Println("Fail parse", err)
-				// 	}
-				// 	end, err := getDateTime(times[j+1], "2006-01-02 15:04:05")
-				// 	if err != nil {
-				// 		log.Println("Fail parse", err)
-				// 	}
-				// 	diff := end.Sub(start)
-				// 	res.HorasTrabajadas = append(res.HorasTrabajadas, diff)
-				// 	if len(res.HorasTrabajadas) > maxTurnos {
-				// 		maxTurnos = len(res.Horario)
-				// 	}
-				// 	th, thw, retraso := checkWorkedHours(res.Horario, start, end, currentT)
-				// 	res.Retraso += retraso
-				// 	res.Total = th
-				// 	res.TotalHrsWorked += thw
-				// 	j++
+// 	log.Println("DEFAULT VALUE TIME", lastTime)
+// 	// Append data to map horarioByDay
+// 	for i := 0; i < len(horario); i++ {
+// 		current, exist := horarioByDay[horario[i].Day]
+// 		if exist {
+// 			horarioByDay[horario[i].Day] = append(current, horario[i])
+// 		} else {
+// 			horarioByDay[horario[i].Day] = []_r.Horario{horario[i]}
+// 		}
+// 	}
 
-				// }
+// 	// Validar que la marcacion del dia de ayer no sea nula
+// 	if res.FirstM != nil && res.FirstT != nil {
+// 		// Validar que la marcacion del dia anterior se de tipo entrada
+// 		if *res.FirstT == _r.MarcacionEntrada {
+// 			// Append marcacion a la lista de marcaciones hora  y marcaciones tipo
+// 			res.Times = append(res.Times, *res.FirstM)
+// 			res.Types = append(res.Types, *res.FirstT)
+// 		}
+// 	}
+// 	// Convertir string to slice y adjuntar a  lista de marcaciones hora  y marcaciones tipo
+// 	if res.TimesString != "" {
+// 		res.Times = append(res.Times, strings.Split(res.TimesString, ",")...)
+// 	}
+
+// 	if res.TypesString != "" {
+// 		res.Types = append(res.Types, strings.Split(res.TypesString, ",")...)
+// 	}
+
+// 	// Validar que la marcacion del dia siguiente no sea nula
+// 	if res.LastM != nil && res.LastT != nil {
+// 		// Validar que la marcacion del dia siguiente sea de tipo salida
+// 		if *res.LastT == _r.MarcacionSalida {
+// 			// Append marcacion a la lista de marcaciones hora  y marcaciones tipo
+// 			res.Times = append(res.Times, *res.LastM)
+// 			res.Types = append(res.Types, *res.LastT)
+// 		}
+// 	}
+// 	// Convert string date to time
+// 	log.Println("MARCACIONES FECHA", res.Times)
+// 	log.Println("MARCACIONES Types", res.Types)
+
+// 	log.Println("DATE", res.Date)
+// 	currentT, err := getDateTime(res.Date, "2006-01-02T15:04:05Z")
+// 	if err != nil {
+// 		log.Println("fail to parse", err)
+// 	}
+// 	// Get Horario dando el dia de la fecha
+// 	res.Horario = horarioByDay[int(currentT.Weekday())]
+
+// 	log.Println("CURRENT DAY", currentT, currentT.Day(), int(currentT.Weekday()))
+// 	times := res.Times
+// 	types := res.Types
+
+// 	// Iterar sobre las fechas de las marcaciones
+// 	for j := 0; j < len(times); j++ {
+// 		if types[j] == _r.MarcacionEntrada {
+
+// 			if len(times) >= (j+2) && types[j+1] == _r.MarcacionSalida {
+// 				start, err := getDateTime(times[j], "2006-01-02 15:04:05")
+// 				if err != nil {
+// 					log.Println("Fail parse", err)
+// 				}
+// 				end, err := getDateTime(times[j+1], "2006-01-02 15:04:05")
+// 				if err != nil {
+// 					log.Println("Fail parse", err)
+// 				}
+// 				diff := end.Sub(start)
+// 				res.HorasTrabajadas = append(res.HorasTrabajadas, diff)
+// 				if len(res.HorasTrabajadas) > maxTurnos {
+// 					maxTurnos = len(res.Horario)
+// 				}
+
+// 				th, thw, retraso, _ := checkWorkedHours(res.Horario, start, end, currentT, lastTime, lastRetrasoR)
+
+// 				lastTime = end
+// 				res.Retraso += retraso
+// 				res.HorasAsignadas = th
+// 				res.TotalHrsWorkedInSchedule += thw
+// 				// res.Retraso2 += retraso2
+// 				log.Println("TotalWorkedHrs", res.TotalHrsWorkedInSchedule)
+// 				j++
+
+// 			} else {
+// 				maxMarks = j + 1
+// 			}
+// 		} else {
+// 			log.Println("Is out")
+// 		}
+// 		if j > maxMarks {
+// 			maxMarks = j + 1
+// 		}
+// 	}
+
+// 	log.Println("DATA RESULT", res)
+
+// 	var (
+// 		marcaciones   string
+// 		hrsTrabajadas time.Duration
+// 		horarioString string
+// 	)
+// 	for j, m := range res.Times {
+// 		log.Println(m)
+// 		if m != "" {
+// 			marcaciones += m[11:16] + " " + getType(res.Types[j])
+// 			marcaciones += " - "
+// 		}
+// 	}
+// 	marcaciones = strings.TrimSuffix(marcaciones, " - ")
+
+// 	for j := 0; j < len(res.Horario); j++ {
+// 		if len(res.Horario) >= (1 + j) {
+// 			horarioString += res.Horario[j].StartTime.Format("15:04") + " - " + res.Horario[j].EndTime.Format("15:04") + "   "
+// 		}
+// 	}
+
+// 	for j := 0; j < (maxMarks / 2); j++ {
+// 		if len(res.HorasTrabajadas) >= (1 + j) {
+// 			hrsTrabajadas += res.HorasTrabajadas[j]
+// 		}
+// 	}
+// 	res.HorasRestantes = res.HorasAsignadas - res.TotalHrsWorkedInSchedule
+// 	for _, v := range lastRetrasoR {
+// 		res.Retraso2 += v
+// 	}
+
+// 	if hrsTrabajadas > res.HorasAsignadas {
+// 		hrsExcedente = hrsTrabajadas - res.HorasAsignadas
+// 	}
+
+// 	asistencia = _r.Asistencia{
+// 		CardHolderGuid:         d.CardHolderGuid,
+// 		AsistenciaDate:         res.Date,
+// 		Retraso:                res.Retraso.Seconds(),
+// 		Retraso2:               res.Retraso2.Seconds(),
+// 		HrsTrabajadasEnHorario: res.TotalHrsWorkedInSchedule.Seconds(),
+// 		HrsTotales:             res.HorasAsignadas.Seconds(),
+// 		HrsTrabajadas:          hrsTrabajadas.Seconds(),
+// 		HrsExcedentes:          hrsExcedente.Seconds(),
+// 		Horario:                horarioString,
+// 		Marcaciones:            marcaciones,
+// 		CountMarcaciones:       maxMarks,
+// 	}
+// 	asistencia.IdSitio = d.IdSitio
+// 	asistencia.IdArea = d.IdArea
+// 	asistencia.DoorGuid = d.DoorGuid
+// 	// u.CreateOrUpdateAsistencia(context.Background(), asistencia)
+// 	return
+// }

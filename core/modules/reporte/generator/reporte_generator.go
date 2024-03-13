@@ -328,8 +328,7 @@ func (r *reporteGenerator) CreateSheetEmploye(items []_r.Asistencia, sheet strin
 		totalHrsExcedentes += hrsExcedentes
 		totalHrsDelay += hrsDelay
 		totalHrsDelay2 += hrsDelay2
-
-		slice := []interface{}{c.AsistenciaDate[0:10]}
+		slice := []interface{}{c.AsistenciaDate.Format(time.RFC3339)[0:10]}
 		slice = append(slice, c.Marcaciones)
 		slice = append(slice, c.Horario)
 		slice = append(slice, _r.Timespan(time.Second*time.Duration(c.HrsTotales)).Format())
@@ -475,7 +474,7 @@ func (r *reporteGenerator) CreateSheetEmployeSitio(items []_r.Asistencia, sheet 
 		totalHrsDelay += hrsDelay
 		totalHrsDelay2 += hrsDelay2
 		fullName := fmt.Sprintf("%s %s", c.EmployeeFirstName, c.EmployeeLastName)
-		slice := []interface{}{fullName, c.AreaName, c.AsistenciaDate[0:10]}
+		slice := []interface{}{fullName, c.AreaName, c.AsistenciaDate.Format(time.RFC3339)[0:10]}
 		slice = append(slice, c.Marcaciones)
 		slice = append(slice, c.Horario)
 		slice = append(slice, _r.Timespan(time.Second*time.Duration(c.HrsTotales)).Format())
@@ -621,7 +620,7 @@ func (r *reporteGenerator) CreateSheetEmployeArea(items []_r.Asistencia, sheet s
 		totalHrsDelay += hrsDelay
 		totalHrsDelay2 += hrsDelay2
 		fullName := fmt.Sprintf("%s %s", c.EmployeeFirstName, c.EmployeeLastName)
-		slice := []interface{}{fullName, c.SitioName, c.AsistenciaDate[0:10]}
+		slice := []interface{}{fullName, c.SitioName, c.AsistenciaDate.Format(time.RFC3339)[0:10]}
 		slice = append(slice, c.Marcaciones)
 		slice = append(slice, c.Horario)
 		slice = append(slice, _r.Timespan(time.Second*time.Duration(c.HrsTotales)).Format())

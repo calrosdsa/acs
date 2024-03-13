@@ -7,7 +7,7 @@
     "timeout":2
   },
   "database": {
-      "host": "172.20.20.94",
+      "host": "172.20.20.93",
       "port": "1433",
       "user": "sa",
       "pass": "Teclu2021",
